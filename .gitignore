@@ -3,12 +3,16 @@ build
 .project
 .classpath
 
+*.adoc
 *.class
 *.log
 .gradle
 .settings
 .stop___MAS
 
+demos
+
+doc
 doc/faq.html
 doc/api
 doc/tech/*Parser.html
