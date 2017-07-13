@@ -1,5 +1,9 @@
 bin
 build
+demos
+examples
+doc
+
 .project
 .classpath
 
@@ -9,8 +13,6 @@ build
 .gradle
 .settings
 .stop___MAS
-
-demos
 
 doc
 doc/faq.html
