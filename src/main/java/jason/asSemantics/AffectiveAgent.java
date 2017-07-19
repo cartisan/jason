@@ -1,9 +1,5 @@
 package jason.asSemantics;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,13 +18,9 @@ import jason.RevisionFailedException;
 import jason.architecture.AgArch;
 import jason.asSyntax.ASSyntax;
 import jason.asSyntax.Literal;
-import jason.asSyntax.Plan;
-import jason.asSyntax.Rule;
-import jason.asSyntax.Term;
 import jason.asSyntax.Trigger;
 import jason.asSyntax.Trigger.TEOperator;
 import jason.asSyntax.Trigger.TEType;
-import jason.asSyntax.directives.Include;
 import jason.bb.BeliefBase;
 import jason.bb.DefaultBeliefBase;
 import jason.bb.StructureWrapperForLiteral;
@@ -283,178 +275,4 @@ public class AffectiveAgent extends Agent {
         
         return adds + dels;
     }
-
-    
-    
-    /** parse and load the initial agent code, asSrc may be null */
-    @Override
-    public void load(String asSrc) throws JasonException {
-        // set the agent
-        try {
-            boolean parsingOk = true;
-            if (asSrc != null) {
-                asSrc = asSrc.replaceAll("\\\\", "/");
-                setASLSrc(asSrc);
-    
-                if (asSrc.startsWith(Include.CRPrefix)) {
-                    // loads the class from a jar file (for example)
-                    parseAS(Agent.class.getResource(asSrc.substring(Include.CRPrefix.length())).openStream());
-                } else {
-                    // check whether source is an URL string
-                    try {
-                        parsingOk = parseAS(new URL(asSrc));
-                    } catch (MalformedURLException e) {
-                        parsingOk = parseAS(new File(asSrc));
-                    }
-                }
-            }
-
-            
-            if (parsingOk) {
-                if (getPL().hasMetaEventPlans())
-                    getTS().addGoalListener(new GoalListenerForMetaEvents(getTS()));
-                
-                addInitialBelsFromProjectInBB();
-                addInitialBelsInBB();
-                addInitialGoalsFromProjectInBB();
-                addInitialGoalsInTS();
-                fixAgInIAandFunctions(this); // used to fix agent reference in functions used inside includes
-            }
-            
-            loadKqmlPlans();
-            
-            setASLSrc(asSrc);
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error creating customised Agent class!", e);
-            throw new JasonException("Error creating customised Agent class! - " + e);
-        }
-    }
-    
-    
-    /** add the initial beliefs in BB and produce the corresponding events */
-    @Override
-    public void addInitialBelsInBB() throws RevisionFailedException {
-        // Once beliefs are stored in a Stack in the BB, insert them in inverse order
-        for (int i=initialBels.size()-1; i >=0; i--) {
-            Literal b = initialBels.get(i);
-
-            // if l is not a rule and has free vars (like l(X)), convert it into a rule like "l(X) :- true."
-            if (!b.isRule() && !b.isGround())
-                b = new Rule(b,Literal.LTrue);
-            
-            // does not do BRF for rules (and so do not produce events +bel for rules)
-            if (b.isRule()) {
-                getBB().add(b);
-            } else {
-                b = (Literal)b.capply(null); // to solve arithmetic expressions
-                addBel(b);
-            }
-        }
-        initialBels.clear();
-    }
-    
-    @Override
-    protected void addInitialBelsFromProjectInBB() {
-        String sBels = getTS().getSettings().getUserParameter(Settings.INIT_BELS);
-        if (sBels != null) {
-            try {
-                for (Term t: ASSyntax.parseList("["+sBels+"]")) {
-                    Literal b = ((Literal)t).forceFullLiteralImpl();
-                    addBel(b);
-                }
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Initial beliefs from project '["+sBels+"]' is not a list of literals.");
-            }
-        }
-    }
-    
-    /** includes all initial goals in the agent reasoner */
-    @Override
-    public void addInitialGoalsInTS() {
-        for (Literal g: initialGoals) {
-            g.makeVarsAnnon();
-            if (! g.hasSource())
-                g.addAnnot(BeliefBase.TSelf);
-            getTS().getC().addAchvGoal(g,Intention.EmptyInt);            
-        }
-        initialGoals.clear();
-    }
-
-    @Override
-    protected void addInitialGoalsFromProjectInBB() {
-        String sGoals = getTS().getSettings().getUserParameter(Settings.INIT_GOALS);
-        if (sGoals != null) {
-            try {
-                for (Term t: ASSyntax.parseList("["+sGoals+"]")) {
-                    Literal g = ((Literal)t).forceFullLiteralImpl();
-                    g.makeVarsAnnon();
-                    if (! g.hasSource())
-                        g.addAnnot(BeliefBase.TSelf);
-                    getTS().getC().addAchvGoal(g,Intention.EmptyInt);            
-                }
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Initial goals from project '["+sGoals+"]' is not a list of literals.");
-            }
-        }
-    }
-
-    
-    /** Imports beliefs, plans and initial goals from another agent. Initial beliefs and goals 
-     *  are stored in "initialBels" and "initialGoals" lists but not included in the BB / TS.
-     *  The methods addInitialBelsInBB and addInitialGoalsInTS should be called in the sequel to
-     *  add those beliefs and goals into the agent. */
-    @Override
-    public void importComponents(Agent a) throws JasonException {
-        if (a != null) {
-            for (Literal b: a.initialBels) {
-                this.addInitialBel(b);
-                try {
-                    fixAgInIAandFunctions(this,b);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            
-            for (Literal g: a.initialGoals) 
-                this.addInitialGoal(g);
-                        
-            for (Plan p: a.getPL()) 
-                this.getPL().add(p, false);
-
-            if (getPL().hasMetaEventPlans())
-                getTS().addGoalListener(new GoalListenerForMetaEvents(getTS()));
-        }
-    }
-    
-
-    
-    /** Removes all occurrences of <i>bel</i> in BB. 
-    If <i>un</i> is null, an empty Unifier is used. 
-	**/
-    @Override
-	public void abolish(Literal bel, Unifier un) throws RevisionFailedException {
-	    List<Literal> toDel = new ArrayList<Literal>();
-	    if (un == null) un = new Unifier();
-	    synchronized (bb.getLock()) {
-	        Iterator<Literal> il = getBB().getCandidateBeliefs(bel, un);
-	        if (il != null) {
-	            while (il.hasNext()) {
-	                Literal inBB = il.next();
-	                if (!inBB.isRule()) {
-	                    // need to clone unifier since it is changed in previous iteration
-	                    if (un.clone().unifiesNoUndo(bel, inBB)) {
-	                        toDel.add(inBB);
-	                    }
-	                }
-	            }
-	        }
-	        
-	        for (Literal l: toDel) {
-	            delBel(l);
-	        }
-	    }
-	}
-
-    
-
 }
