@@ -74,10 +74,10 @@ public class Agent {
     protected TransitionSystem ts = null;
     protected String           aslSource = null;
     
-    private List<Literal>      initialGoals = null; // initial goals in the source code
-    private List<Literal>      initialBels  = null; // initial beliefs in the source code
+    protected List<Literal>      initialGoals = null; // initial goals in the source code
+    protected List<Literal>      initialBels  = null; // initial beliefs in the source code
 
-    private Map<String, InternalAction> internalActions = null;
+    protected Map<String, InternalAction> internalActions = null;
     private Map<String, ArithFunction>  functions       = null;
     
     private boolean hasCustomSelOp = true;
@@ -312,7 +312,7 @@ public class Agent {
         return a;
     }
     
-    private void fixAgInIAandFunctions(Agent a) throws Exception {
+    protected void fixAgInIAandFunctions(Agent a) throws Exception {
         // find all internal actions and functions and change the pointer for agent
         synchronized (getPL().getLock()) {
             for (Plan p: a.getPL()) {
@@ -327,7 +327,7 @@ public class Agent {
         }
     }
     
-    private void fixAgInIAandFunctions(Agent a, Literal l) throws Exception {
+    protected void fixAgInIAandFunctions(Agent a, Literal l) throws Exception {
         // if l is internal action/function
         if (l instanceof InternalActionLiteral) {
             ((InternalActionLiteral)l).setIA(null); // reset the IA in the literal, the IA there will be updated next getIA call
