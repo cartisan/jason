@@ -51,7 +51,7 @@ import jason.util.Config;
 
 public class TransitionSystem {
 
-    public enum State { StartRC, SelEv, RelPl, ApplPl, SelAppl, FindOp, AddIM, ProcAct, SelInt, ExecInt, ClrInt }
+    //public enum State { StartRC, SelEv, RelPl, ApplPl, SelAppl, FindOp, AddIM, ProcAct, SelInt, ExecInt, ClrInt }
     
     private Logger        logger     = null;
 
@@ -61,9 +61,9 @@ public class TransitionSystem {
     private Settings      setts      = null;
     //private State         step       = State.StartRC; // first step of the SOS
     
-    private State         stepSense       = State.StartRC; 
-    private State         stepDeliberate  = State.SelEv; 
-    private State         stepAct         = State.ProcAct;
+    protected String         stepSense       = "StartRC"; 
+    protected String         stepDeliberate  = "SelEv"; 
+    protected String         stepAct         = "ProcAct";
 
     
     private int           nrcslbr    = Settings.ODefaultNRC; // number of reasoning cycles since last belief revision    
@@ -189,33 +189,33 @@ public class TransitionSystem {
     /* SEMANTIC RULES */
     /** ******************************************************************* */
 
-    private void applySemanticRuleSense() throws JasonException {
+    protected void applySemanticRuleSense() throws JasonException {
         switch (stepSense) {
-            case StartRC:   applyProcMsg(); break;
+            case "StartRC":   applyProcMsg(); break;
         default:
             break;
         }
     }
                 
-    private void applySemanticRuleDeliberate() throws JasonException {
+    protected void applySemanticRuleDeliberate() throws JasonException {
         switch (stepDeliberate) {
-            case SelEv:     applySelEv(); break; 
-            case RelPl:     applyRelPl();  break;
-            case ApplPl:    applyApplPl(); break; 
-            case SelAppl:   applySelAppl(); break;
-            case FindOp:    applyFindOp(); break; 
-            case AddIM:     applyAddIM(); break;
+            case "SelEv":     applySelEv(); break; 
+            case "RelPl":     applyRelPl();  break;
+            case "ApplPl":    applyApplPl(); break; 
+            case "SelAppl":   applySelAppl(); break;
+            case "FindOp":    applyFindOp(); break; 
+            case "AddIM":     applyAddIM(); break;
         default:
             break;  
         }
     }
     
-    private void applySemanticRuleAct() throws JasonException {
+    protected void applySemanticRuleAct() throws JasonException {
         switch (stepAct) {
-            case ProcAct:   applyProcAct(); break;
-            case SelInt:    applySelInt(); break; 
-            case ExecInt:   applyExecInt(); break;
-            case ClrInt:    confP.stepAct = State.StartRC; 
+            case "ProcAct":   applyProcAct(); break;
+            case "SelInt":    applySelInt(); break; 
+            case "ExecInt":   applyExecInt(); break;
+            case "ClrInt":    confP.stepAct = "StartRC"; 
                             applyClrInt(conf.C.SI);
                             break;
         default:
@@ -251,8 +251,8 @@ public class TransitionSystem {
 
     private final String kqmlReceivedFunctor = Config.get().getKqmlFunctor();
     
-    private void applyProcMsg() throws JasonException {
-        confP.stepSense = State.SelEv;
+    protected void applyProcMsg() throws JasonException {
+        confP.stepSense = "SelEv";
         if (conf.C.hasMsg()) {
             Message m = conf.ag.selectMessage(conf.C.getMailBox());
             if (m == null) return;
@@ -370,18 +370,18 @@ public class TransitionSystem {
         
     }
 
-    private void applySelEv() throws JasonException {
+    protected void applySelEv() throws JasonException {
         
         // Rule for atomic, if there is an atomic intention, do not select event
         if (C.hasAtomicIntention()) {
-            confP.stepDeliberate = State.ProcAct; // need to go to ProcAct to see if an atomic intention received a feedback action
+            confP.stepDeliberate = "ProcAct"; // need to go to ProcAct to see if an atomic intention received a feedback action
             return;            
         }
 
         // Rule for atomic, events from atomic intention have priority
         confP.C.SE = C.removeAtomicEvent();
         if (confP.C.SE != null) {
-            confP.stepDeliberate = State.RelPl;
+            confP.stepDeliberate = "RelPl";
             return;
         }
 
@@ -392,43 +392,43 @@ public class TransitionSystem {
                 logger.fine("Selected event "+confP.C.SE);
             if (confP.C.SE != null) {
                 if (ag.hasCustomSelectOption() || setts.verbose() == 2) // verbose == 2 means debug mode 
-                    confP.stepDeliberate = State.RelPl;
+                    confP.stepDeliberate = "RelPl";
                 else 
-                    confP.stepDeliberate = State.FindOp;
+                    confP.stepDeliberate = "FindOp";
                 return;
             }
         }
         // Rule SelEv2
         // directly to ProcAct if no event to handle
-        confP.stepDeliberate = State.ProcAct;
+        confP.stepDeliberate = "ProcAct";
     }
 
-    private void applyRelPl() throws JasonException {
+    protected void applyRelPl() throws JasonException {
         // get all relevant plans for the selected event
         confP.C.RP = relevantPlans(conf.C.SE.trigger);
 
         // Rule Rel1
         if (confP.C.RP != null || setts.retrieve()) 
             // retrieve is mainly for Coo-AgentSpeak
-            confP.stepDeliberate = State.ApplPl;
+            confP.stepDeliberate = "ApplPl";
         else
             applyRelApplPlRule2("relevant");
     }
     
-    private void applyApplPl() throws JasonException {
+    protected void applyApplPl() throws JasonException {
         confP.C.AP = applicablePlans(confP.C.RP);
 
         // Rule Appl1
         if (confP.C.AP != null || setts.retrieve()) 
             // retrieve is mainly for Coo-AgentSpeak
-            confP.stepDeliberate = State.SelAppl;
+            confP.stepDeliberate = "SelAppl";
         else
             applyRelApplPlRule2("applicable");
     }
 
     /** generates goal deletion event */
-    private void applyRelApplPlRule2(String m) throws JasonException {
-        confP.stepDeliberate = State.ProcAct; // default next step
+    protected void applyRelApplPlRule2(String m) throws JasonException {
+        confP.stepDeliberate = "ProcAct"; // default next step
         if (conf.C.SE.trigger.isGoal() && !conf.C.SE.trigger.isMetaEvent()) {
             // can't carry on, no relevant/applicable plan.
             try {
@@ -459,23 +459,23 @@ public class TransitionSystem {
         } else {
             // current event is external and irrelevant,
             // discard that event and select another one
-            confP.stepDeliberate = State.SelEv;
+            confP.stepDeliberate = "SelEv";
         }
     }
     
 
-    private void applySelAppl() throws JasonException {
+    protected void applySelAppl() throws JasonException {
         // Rule SelAppl
         confP.C.SO = conf.ag.selectOption(confP.C.AP);
 
         if (confP.C.SO != null) {
-            confP.stepDeliberate = State.AddIM;
+            confP.stepDeliberate = "AddIM";
             if (logger.isLoggable(Level.FINE)) logger.fine("Selected option "+confP.C.SO+" for event "+confP.C.SE);
         } else {
             logger.fine("** selectOption returned null!");
             generateGoalDeletionFromEvent(JasonException.createBasicErrorAnnots("no_option", "selectOption returned null"));
             // can't carry on, no applicable plan.
-            confP.stepDeliberate = State.ProcAct;
+            confP.stepDeliberate = "ProcAct";
         }
     }
 
@@ -486,8 +486,8 @@ public class TransitionSystem {
      * 
      * @since 1.1
      */
-    private void applyFindOp() throws JasonException {
-        confP.stepDeliberate = State.AddIM; // default next step
+    protected void applyFindOp() throws JasonException {
+        confP.stepDeliberate = "AddIM"; // default next step
         
         // get all relevant plans for the selected event
         //Trigger te = (Trigger) conf.C.SE.trigger.clone();
@@ -516,7 +516,7 @@ public class TransitionSystem {
         }        
     }
     
-    private void applyAddIM() throws JasonException {
+    protected void applyAddIM() throws JasonException {
         // create a new intended means
         IntendedMeans im = new IntendedMeans(conf.C.SO, conf.C.SE.getTrigger());
 
@@ -567,11 +567,11 @@ public class TransitionSystem {
             confP.C.SE.intention.push(im);
             confP.C.addIntention(confP.C.SE.intention);
         }
-        confP.stepDeliberate = State.ProcAct;
+        confP.stepDeliberate = "ProcAct";
     }
 
-    private void applyProcAct() throws JasonException {
-        confP.stepAct = State.SelInt; // default next step
+    protected void applyProcAct() throws JasonException {
+        confP.stepAct = "SelInt"; // default next step
         if (conf.C.hasFeedbackAction()) {
             ActionExec a = null;
             synchronized (conf.C.getFeedbackActions()) {
@@ -609,8 +609,8 @@ public class TransitionSystem {
         }
     }
 
-    private void applySelInt() throws JasonException {
-        confP.stepAct = State.ExecInt; // default next step
+    protected void applySelInt() throws JasonException {
+        confP.stepAct = "ExecInt"; // default next step
 
         // Rule for Atomic Intentions
         confP.C.SI = C.removeAtomicIntention();
@@ -628,12 +628,12 @@ public class TransitionSystem {
             }
         }
 
-        confP.stepAct = State.StartRC;
+        confP.stepAct = "StartRC";
     }
 
     @SuppressWarnings("unchecked")
-    private void applyExecInt() throws JasonException {
-        confP.stepAct = State.ClrInt; // default next step
+    protected void applyExecInt() throws JasonException {
+        confP.stepAct = "ClrInt"; // default next step
         
         final Intention curInt = conf.C.SI;
         if (curInt == null)
@@ -756,7 +756,7 @@ public class TransitionSystem {
         case achieve:
             body = prepareBodyForEvent(body, u, curInt.peek());
             Event evt = conf.C.addAchvGoal(body, curInt);
-            confP.stepAct = State.StartRC;
+            confP.stepAct = "StartRC";
             checkHardDeadline(evt);
             break;
 
@@ -784,7 +784,7 @@ public class TransitionSystem {
                         if (ag.getPL().hasCandidatePlan(te)) {
                             if (logger.isLoggable(Level.FINE)) logger.fine("Test Goal '" + bTerm + "' failed as simple query. Generating internal event for it: "+te);
                             conf.C.addEvent(evt);
-                            confP.stepAct = State.StartRC;
+                            confP.stepAct = "StartRC";
                             fail = false;
                         }
                     }
@@ -1437,15 +1437,23 @@ public class TransitionSystem {
                 }
             }
             
-            stepSense = State.StartRC;
+            stepSense = startingStepSense();
             do {
                 applySemanticRuleSense();
-            } while (stepSense != State.SelEv && getUserAgArch().isRunning());
+            } while (stepSense != stoppingStepSense() && getUserAgArch().isRunning());
             
         } catch (Exception e) {
             logger.log(Level.SEVERE, "*** ERROR in the transition system (sense). "+conf.C+"\nCreating a new C!", e);
             conf.C.create();
         }
+    }
+    
+    protected String startingStepSense() {
+    	return "StartRC";
+    }
+    
+    protected String stoppingStepSense() {
+    	return "SelEv";
     }
     
     public void deliberate() {
@@ -1459,10 +1467,10 @@ public class TransitionSystem {
                 r = taskForBeginOfCycle.poll();
             }
             
-            stepDeliberate = State.SelEv;
+            stepDeliberate = startingStepDeliberate();
             do {
                 applySemanticRuleDeliberate();
-            } while (stepDeliberate != State.ProcAct && getUserAgArch().isRunning());
+            } while (stepDeliberate != stoppingStepDeliberate() && getUserAgArch().isRunning());
             
         } catch (Exception e) {
             logger.log(Level.SEVERE, "*** ERROR in the transition system (deliberate). "+conf.C+"\nCreating a new C!", e);
@@ -1470,14 +1478,22 @@ public class TransitionSystem {
         }
     }
     
+    protected String startingStepDeliberate() {
+    	return "SelEv";
+    }
+    
+    protected String stoppingStepDeliberate() {
+    	return "ProcAct";
+    }
+    
     public void act() {
         try {
             C.resetAct();
             
-            stepAct = State.ProcAct;
+            stepAct = startingStepAct();
             do {
                 applySemanticRuleAct(); 
-            } while (stepAct != State.StartRC && getUserAgArch().isRunning());
+            } while (stepAct != stoppingStepAct() && getUserAgArch().isRunning());
             
             
             ActionExec action = C.getAction(); 
@@ -1490,6 +1506,14 @@ public class TransitionSystem {
             logger.log(Level.SEVERE, "*** ERROR in the transition system (act). "+conf.C+"\nCreating a new C!", e);
             conf.C.create();
         }
+    }
+    
+    protected String startingStepAct() {
+    	return "ProcAct";
+    }
+    
+    protected String stoppingStepAct() {
+    	return "StartRC";
     }
     
     /*
