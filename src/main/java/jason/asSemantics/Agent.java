@@ -77,7 +77,7 @@ public class Agent {
     protected List<Literal>      initialGoals = null; // initial goals in the source code
     protected List<Literal>      initialBels  = null; // initial beliefs in the source code
 
-    protected Map<String, InternalAction> internalActions = null;
+    private Map<String, InternalAction> internalActions = null;
     private Map<String, ArithFunction>  functions       = null;
     
     private boolean hasCustomSelOp = true;
@@ -673,6 +673,10 @@ public class Agent {
         setLogger(ts.getUserAgArch());
         if (ts.getSettings().verbose() >= 0)
             logger.setLevel(ts.getSettings().logLevel());        
+    }
+    
+    public void setInternalActions(Map<String, InternalAction> internalActions) {
+        this.internalActions = internalActions;
     }
 
     public TransitionSystem getTS() {

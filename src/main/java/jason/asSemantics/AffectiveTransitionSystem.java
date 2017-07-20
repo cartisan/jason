@@ -9,10 +9,14 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         super(a, c, s, ar);
     }
     
-    @Override
-    public void deliberate() {
-        System.out.println("Test");
-        super.deliberate();
+    public AffectiveTransitionSystem(TransitionSystem ts) {
+        super(ts.getAg(), ts.getC(), ts.getSettings(), ts.getUserAgArch());
     }
+    
+//    @Override
+//    public void deliberate() {
+//        System.out.println("Test");
+//        super.deliberate();
+//    }
 
 }

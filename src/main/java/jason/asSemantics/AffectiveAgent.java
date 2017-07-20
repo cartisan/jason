@@ -1,98 +1,32 @@
 package jason.asSemantics;
 
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Level;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
-import jason.JasonException;
-import jason.RevisionFailedException;
 import jason.architecture.AgArch;
-import jason.asSyntax.ASSyntax;
-import jason.asSyntax.Literal;
-import jason.asSyntax.Trigger;
-import jason.asSyntax.Trigger.TEOperator;
-import jason.asSyntax.Trigger.TEType;
-import jason.bb.BeliefBase;
-import jason.bb.DefaultBeliefBase;
-import jason.bb.StructureWrapperForLiteral;
-import jason.mas2j.ClassParameters;
-import jason.runtime.Settings;
+import jason.asSemantics.AffectiveTransitionSystem;
+import jason.asSemantics.Agent;
+import jason.asSemantics.GoalListenerForMetaEvents;
+import jason.asSemantics.InternalAction;
 
 /*
- * A subclass of agent that employs personality aware affective reasoning according to O3A.
- * This reasoning cycle is implemented in the AffectiveTransitionSystem, a subclass of Transition System. The ts
- * instance variable in this class is changed to reference an AffectiveTransitionSystem, and all methods returning
- * ts instances are updated to return the right type. In order to prevent control to slip to the super class, a
- * transitive closure of methods accessing or returning ts is copied from the super class.
- *  
+ *  A subclass of jason.asSemantics.Agent that employs personality aware affective reasoning according to O3A.
+ *  This reasoning cycle is implemented in the AffectiveTransitionSystem, a subclass of Transition System. The present
+ *  class changes the initialization and cloning methods of its super class in order to inject the new TransitionSystem.
+ * 
+ *  In order to use affective reasoning capabilities in you Custom Agent implementations, subclass from this class
+ *  or use 'agentClass jason.asSemantics.AffectiveAgent' in your mas2j file.
  */
 public class AffectiveAgent extends Agent {
 
-    protected AffectiveTransitionSystem ts = null;
-	
-	public AffectiveAgent() {
-	}
-
-	 /**
-     * Setup the default agent configuration.
-     * 
-     * Creates the agent class defined by <i>agClass</i>, default is jason.asSemantics.AffectiveAgent. 
-     * Creates the TS for the agent.
-     * Creates the belief base for the agent. 
-     */
-    public static AffectiveAgent create(AgArch arch, String agClass, ClassParameters bbPars, String asSrc, Settings stts) throws JasonException {
-        try {
-        	AffectiveAgent ag = (AffectiveAgent) Class.forName(agClass).newInstance();
-        	new AffectiveTransitionSystem(ag, null, stts, arch);
-            
-
-            BeliefBase bb = null;
-            if (bbPars == null)
-                bb = new DefaultBeliefBase();
-            else
-                bb = (BeliefBase) Class.forName(bbPars.getClassName()).newInstance();
-
-            ag.setBB(bb);     // the agent's BB have to be already set for the BB initialisation
-            ag.initAg();
-
-            if (bbPars != null)
-                bb.init(ag, bbPars.getParametersArray());  
-            ag.load(asSrc); // load the source code of the agent
-            return ag;
-        } catch (Exception e) {
-            throw new JasonException("as2j: error creating the customised Agent class! - "+agClass, e);
-        }
+    public AffectiveAgent() {
+        super();
     }
-        
+
     @Override
     public void initAg() {
-        if (ts == null) ts = new AffectiveTransitionSystem(this, null, null, new AgArch());
+        ts = new AffectiveTransitionSystem(this.ts);
         super.initAg();
-        super.ts = null;
     }
-    
-    /** TS Initialisation (called by the AgArch) */
-    public void setTS(AffectiveTransitionSystem ts) {
-        this.ts = ts;
-        setLogger(ts.getUserAgArch());
-        if (ts.getSettings().verbose() >= 0)
-            logger.setLevel(ts.getSettings().logLevel());        
-    }
-
-    @Override
-    public AffectiveTransitionSystem getTS() {
-        return ts;
-    }
-    
     
     /** 
      *  Clone BB, PL, Circumstance. 
@@ -125,7 +59,7 @@ public class AffectiveAgent extends Agent {
             e.printStackTrace();
         }
         a.aslSource = this.aslSource;
-        a.internalActions = new HashMap<String, InternalAction>();
+        a.setInternalActions(new HashMap<String, InternalAction>());
         
         a.setTS(new AffectiveTransitionSystem(a, this.getTS().getC().clone(), this.getTS().getSettings(), arch));
         if (a.getPL().hasMetaEventPlans())
@@ -133,146 +67,5 @@ public class AffectiveAgent extends Agent {
         
         a.initAg(); //for initDefaultFunctions() and for overridden/custom agent 
         return a;
-    }
-    
-    @Override
-    public Element getAsDOM(Document document) {
-    	Element ag = super.getAsDOM(document);
-    	
-    	// change TS related attributes to our affective ts
-        ag.setAttribute("name", ts.getUserAgArch().getAgName());
-        ag.setAttribute("cycle", ""+ts.getUserAgArch().getCycleNumber());
-        
-        return ag;
-    }
-    
-    /** Gets the agent "mind" (beliefs, plans, and circumstance) as XML */
-    @Override
-    public Document getAgState() {
-        if (builder == null) {
-            try {
-                builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Error creating XML builder\n");
-                return null;
-            }
-        }
-        Document document = builder.newDocument();
-        document.appendChild(document.createProcessingInstruction("xml-stylesheet", "href='http://jason.sf.net/xml/agInspection.xsl' type='text/xsl' "));
-
-        Element ag = getAsDOM(document);
-        document.appendChild(ag);
-
-        ag.appendChild(ts.getC().getAsDOM(document));
-        return document;
-    }
-    
-    /**
-     * Adds <i>bel</i> in belief base (calling brf) and generates the
-     * events. If <i>bel</i> has no source, add
-     * <code>source(self)</code>. (the belief is not cloned!)
-     */
-    @Override
-    public boolean addBel(Literal bel) throws RevisionFailedException {
-        if (!bel.hasSource()) {
-            bel.addAnnot(BeliefBase.TSelf);
-        }
-        List<Literal>[] result = brf(bel, null, Intention.EmptyInt);
-        if (result != null && ts != null) {
-            ts.updateEvents(result, Intention.EmptyInt);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * If the agent believes in <i>bel</i>, removes it (calling brf)
-     * and generate the event.
-     */
-    @Override
-    public boolean delBel(Literal bel) throws RevisionFailedException {
-        if (!bel.hasSource()) {
-            bel.addAnnot(BeliefBase.TSelf);
-        }
-        List<Literal>[] result = brf(null, bel, Intention.EmptyInt);
-        if (result != null && ts != null) {
-            ts.updateEvents(result, Intention.EmptyInt);
-            return true;
-        } else {
-            return false;
-        }
-    }
-    
-    
-    /** Belief Update Function: adds/removes percepts into belief base.
-     * 
-     *  @return the number of changes (add + dels)
-     */
-    @Override
-    public int buf(Collection<Literal> percepts) {
-        /*
-        // complexity 3n
-         
-        HashSet percepts = clone from the list of current environment percepts // 1n
-
-        for b in BBPercept (the set of perceptions already in BB) // 1n
-            if b not in percepts // constant time test
-                remove b in BBPercept // constant time
-                remove b in percept
-
-        for p still in percepts // 1n
-            add p in BBPercepts         
-        */
-        
-        if (percepts == null) {
-            return 0;
-        }
-        
-        // stat
-        int adds = 0;
-        int dels = 0;        
-        //long startTime = qProfiling == null ? 0 : System.nanoTime();
-
-        // to copy percepts allows the use of contains below
-        Set<StructureWrapperForLiteral> perW = new HashSet<StructureWrapperForLiteral>();
-        Iterator<Literal> iper = percepts.iterator();
-        while (iper.hasNext())
-            perW.add(new StructureWrapperForLiteral(iper.next()));
-        
-
-        // deleting percepts in the BB that is not perceived anymore
-        Iterator<Literal> perceptsInBB = getBB().getPercepts();
-        while (perceptsInBB.hasNext()) { 
-            Literal l = perceptsInBB.next();
-            if (! perW.remove(new StructureWrapperForLiteral(l))) { // l is not perceived anymore
-                dels++;
-                perceptsInBB.remove(); // remove l as perception from BB
-                
-                // new version (it is sure that l is in BB, only clone l when the event is relevant)
-                Trigger te = new Trigger(TEOperator.del, TEType.belief, l);
-                if (ts.getC().hasListener() || pl.hasCandidatePlan(te)) {
-                    l = ASSyntax.createLiteral(l.getFunctor(), l.getTermsArray());
-                    l.addAnnot(BeliefBase.TPercept);
-                    te.setLiteral(l);
-                    ts.getC().addEvent(new Event(te, Intention.EmptyInt));
-                }
-            }
-        }
-        
-        for (StructureWrapperForLiteral lw: perW) {
-            try {
-                Literal lp = lw.getLiteral().copy().forceFullLiteralImpl();
-                lp.addAnnot(BeliefBase.TPercept);
-                if (getBB().add(lp)) {
-                    adds++;
-                    ts.updateEvents(new Event(new Trigger(TEOperator.add, TEType.belief, lp), Intention.EmptyInt));
-                }
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Error adding percetion " + lw.getLiteral(), e);
-            }
-        }
-        
-        return adds + dels;
     }
 }
