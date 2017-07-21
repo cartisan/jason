@@ -55,7 +55,7 @@ public class TransitionSystem {
 
     private Agent         ag         = null;
     private AgArch        agArch     = null;
-    private Circumstance  C          = null;
+    protected Circumstance  C          = null;
     private Settings      setts      = null;
     //private State         step       = State.StartRC; // first step of the SOS
     

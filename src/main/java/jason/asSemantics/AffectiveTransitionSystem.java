@@ -11,8 +11,8 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     private String originalStepDeliberate = "";
 
     AffectiveTransitionSystem(Agent a, Circumstance c, Settings s, AgArch ar) {
-        super(a, c, s, ar);
-        init();
+    	super(a, c, s, ar);
+    	init();
     }
     
     AffectiveTransitionSystem(TransitionSystem ts) {
@@ -21,8 +21,9 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     }
     
     private void init() {
-        // change the initial step of the sense procedure
-        // stepSense = "DerivePEM";
+    	AffectiveCircumstance affC = new AffectiveCircumstance(this.getC(), (AffectiveAgent) this.getAg());
+    	this.C = affC;
+    	affC.setTS(this);
     }
     
     @Override

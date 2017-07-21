@@ -23,29 +23,29 @@ public class Circumstance implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private   Queue<Event>             E;
-    private   Queue<Intention>         I;
+    protected   Queue<Event>             E;
+    protected   Queue<Intention>         I;
     protected ActionExec               A;
-    private   Queue<Message>           MB;
+    protected   Queue<Message>           MB;
     protected List<Option>             RP;
     protected List<Option>             AP;
     protected Event                    SE;
     protected Option                   SO;
     protected Intention                SI;
     private   Intention                AI; // Atomic Intention
-    private   Event                    AE; // Atomic Event
-    private   boolean                  atomicIntSuspended = false; // whether the current atomic intention is suspended in PA or PI
+    protected   Event                    AE; // Atomic Event
+    protected   boolean                  atomicIntSuspended = false; // whether the current atomic intention is suspended in PA or PI
     //private   boolean                  hasAtomicEvent = false;         
 
-    private Map<Integer, ActionExec>   PA; // Pending actions, waiting action execution (key is the intention id)
-    private List<ActionExec>           FA; // Feedback actions, those that are already executed
+    protected Map<Integer, ActionExec>   PA; // Pending actions, waiting action execution (key is the intention id)
+    protected List<ActionExec>           FA; // Feedback actions, those that are already executed
     
-    private Map<String, Intention>     PI; // pending intentions, intentions suspended by any other reason                                                        
-    private Map<String, Event>         PE; // pending events, events suspended by .suspend                                                        
+    protected Map<String, Intention>     PI; // pending intentions, intentions suspended by any other reason                                                        
+    protected Map<String, Event>         PE; // pending events, events suspended by .suspend                                                        
 
     private Queue<CircumstanceListener> listeners = new ConcurrentLinkedQueue<CircumstanceListener>(); 
 
-    private TransitionSystem ts = null;
+    protected TransitionSystem ts = null;
     
     public Object syncApPlanSense = new Object();
        

@@ -4,9 +4,6 @@ import java.util.HashMap;
 
 import jason.architecture.AgArch;
 import jason.asSemantics.AffectiveTransitionSystem;
-import jason.asSemantics.Agent;
-import jason.asSemantics.GoalListenerForMetaEvents;
-import jason.asSemantics.InternalAction;
 
 /*
  *  A subclass of jason.asSemantics.Agent that employs personality aware affective reasoning according to O3A.
@@ -18,13 +15,16 @@ import jason.asSemantics.InternalAction;
  */
 public class AffectiveAgent extends Agent {
 
-    public AffectiveAgent() {
+	private Personality personality;
+
+	public AffectiveAgent() {
         super();
+        this.personality = Personality.createDefaultPersonality();
     }
 
     @Override
     public void initAg() {
-        ts = new AffectiveTransitionSystem(this.ts);
+        ts = new AffectiveTransitionSystem(this.ts);  // the TransitionSystem sets this.ts to itself in its own init
         super.initAg();
     }
     
@@ -67,5 +67,24 @@ public class AffectiveAgent extends Agent {
         
         a.initAg(); //for initDefaultFunctions() and for overridden/custom agent 
         return a;
+    }
+
+    public Personality getPersonality() {
+    	return personality;
+    }
+    
+    
+    /**
+     * Used to set an AffectiveAgent's personality during initialization. 
+     * On creation, AffectiveAgent will have a neutral personality, this method should be used to set it up. It 
+     * automatcally takes care of updating all personality-related values in relevant for the reasoning cycle.
+     * 
+     * Do not use this to change an agents personality after the inizialization phase.
+     *   
+     * @param personality
+     */
+    public void initializePersonality(Personality personality) {
+    	this.personality = personality;
+    	((AffectiveCircumstance) this.ts.getC()).setMood(this.personality.defaultMood());
     }
 }
