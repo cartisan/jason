@@ -51,8 +51,6 @@ import jason.util.Config;
 
 public class TransitionSystem {
 
-    //public enum State { StartRC, SelEv, RelPl, ApplPl, SelAppl, FindOp, AddIM, ProcAct, SelInt, ExecInt, ClrInt }
-    
     private Logger        logger     = null;
 
     private Agent         ag         = null;
@@ -1160,7 +1158,7 @@ public class TransitionSystem {
     }
 
     // similar to the one above, but for an Event rather than intention
-    private boolean generateGoalDeletionFromEvent(List<Term> failAnnots) throws JasonException {
+    protected boolean generateGoalDeletionFromEvent(List<Term> failAnnots) throws JasonException {
         Event ev = conf.C.SE;
         if (ev == null) {
             logger.warning("** It was impossible to generate a goal deletion event because SE is null! " + conf.C);
@@ -1449,11 +1447,11 @@ public class TransitionSystem {
     }
     
     protected String startingStepSense() {
-    	return "StartRC";
+        return "StartRC";
     }
     
     protected String stoppingStepSense() {
-    	return "SelEv";
+        return "SelEv";
     }
     
     public void deliberate() {
@@ -1479,11 +1477,11 @@ public class TransitionSystem {
     }
     
     protected String startingStepDeliberate() {
-    	return "SelEv";
+        return "SelEv";
     }
     
     protected String stoppingStepDeliberate() {
-    	return "ProcAct";
+        return "ProcAct";
     }
     
     public void act() {
@@ -1509,11 +1507,11 @@ public class TransitionSystem {
     }
     
     protected String startingStepAct() {
-    	return "ProcAct";
+        return "ProcAct";
     }
     
     protected String stoppingStepAct() {
-    	return "StartRC";
+        return "StartRC";
     }
     
     /*
