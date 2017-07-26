@@ -5,7 +5,7 @@ import java.io.Serializable;
 /*
  * Stores an Affective Agent's personality using the Big Five Personality traits:
  *  openness, conscientiousness, extraversion, agreeableness, neuroticism.
- * Traits are represented using scalar double values in the range 0.0 <= x <= 1.0.
+ * Traits are represented using scalar double values in the range -1.0 <= x <= 1.0.
  * 
  * See: R. R. McCrae and O. P. John. An Introduction to the Five-Factor Model and its
  * Applications. Journal of personality, 60(2):175–215, 1992.
@@ -26,7 +26,7 @@ public class Personality implements Serializable {
 	}
 	
 	public static Personality createDefaultPersonality() {
-		return new Personality(0.5, 0.5, 0.5, 0.5, 0.5);
+		return new Personality(0, 0, 0, 0, 0);
 	}
 	
 	/*

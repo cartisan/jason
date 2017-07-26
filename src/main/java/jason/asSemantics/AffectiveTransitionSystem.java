@@ -39,7 +39,8 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     @Override
     protected void applySemanticRuleDeliberate() throws JasonException {
         switch (stepDeliberate) {
-            case "DeriveSEM":     applyDeriveSEM(); break; 
+            // TODO: add case for emotion decay!
+        	case "DeriveSEM":     applyDeriveSEM(); break; 
             case "UpMood":        applyUpMood(); break; 
         default:
             super.applySemanticRuleDeliberate();  

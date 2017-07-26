@@ -16,13 +16,25 @@ public enum Emotion {
 	GRATITUDE(0.4, 0.2, -0.3),
 	SATISFACTION(0.3, -0.2, 0.4);
 	
-
 	public final double P;
 	public final double A;
 	public final double D;
 	
+	public double intensity; // intensity not really supported, it's either there (1) or decayed (0)
+	
 	Emotion(double p, double a, double d) {
 		this.P=p; this.A=a; this.D=d;
+		
+		// Intensity currently not really supported
+		// ideally, intensity is set by appraisal function
+		this.intensity = 1.0;
+	}
+	
+	public void stepDecay() {
+		// ideally emotion decays {linear, exponentially, tan hyperbolic} over time
+		// See: Gebhard P., Kipp M., Klesen M., Rist T. Adding the Emotional Dimension to Scripting Character Dialogues 
+		// In: Proc. of the 4th International Working Conference on Intelligent Virtual Agents (IVA'03), 2003, 48-56.  
+		this.intensity = 0;
 	}
 
 }

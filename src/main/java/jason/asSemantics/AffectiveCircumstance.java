@@ -20,7 +20,7 @@ public class AffectiveCircumstance extends Circumstance {
 		super();
 		createMood(ag);
 		
-		// clone non-affective circumstance
+		// effectively clones c into this
 		if (c.getAtomicEvent() != null) {
 			this.AE = (Event) c.getAtomicEvent().clone();
 		}
