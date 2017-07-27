@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.logging.Logger;
+import javafx.geometry.Point3D;
 
 
 /*
@@ -39,9 +40,7 @@ public class Mood implements Serializable {
 	
 	private Logger logger = null;
 	
-	public double P;
-	public double A;
-	public double D;
+	public Point3D PAD = null;
 
 	public Mood(double p, double a, double d) {
 		logger = Logger.getLogger(Mood.class.getName());
@@ -50,65 +49,52 @@ public class Mood implements Serializable {
 			logger.warning("One of the Mood parameters exceeds the bounds (-1.0 < x < 1.0).");
 			throw new IllegalArgumentException("One of the Mood parameters exceeds the bounds (-1.0 < x < 1.0).");
 		}
-		this.P=p; this.A=a; this.D=d;
+//		this.P=p; this.A=a; this.D=d;
+		this.PAD = new Point3D(p, a, d);
 	}
 	
 	public double strength() {
-		return Math.sqrt(P+A+D);
+		return PAD.magnitude();
 	}
 
 	public void updateMood(List<Emotion> emotions) {
 		// TODO: methods stub
 	}
 	
+	
 	/*
-	 * Applies one decay step that moves this mood closer to defaultMood.
-	 * Each step shifts this mood 1 x DECAY_STEP_LENGTH. If the distance to defaultMood is smaller than that, this mood is
-	 * set to defaultMood instead.
+	 * Applies one decay step, which moves this mood closer to defaultMood.
+	 * Each step shifts this mood 1 x DECAY_STEP_LENGTH in a 3D space. If the distance to defaultMood is smaller
+	 * than that, this mood is set to defaultMood instead. Method computes unit vector from this in the direction
+	 * of defaultMood, than updates this.PAD values by adding the unit vector times DECAY_STEP_LENGTH.  
 	 */
 	public void stepDecay(Mood defaultMood) {
-		double p_diff = defaultMood.P - P;		
-		double a_diff = defaultMood.A - A;		
-		double d_diff = defaultMood.D - D;
-		
-		double distance = distance(p_diff, a_diff, d_diff);
+		Point3D diffVec = defaultMood.PAD.subtract(this.PAD);
 		
 		// check if distance to default mood is smaller then one decay step
 		// in that case, just set new mood to default mood
-		if(distance <= DECAY_STEP_LENGTH) {
-			this.P = defaultMood.P;
-			this.A = defaultMood.A;
-			this.D = defaultMood.D;
+		if(diffVec.magnitude() <= DECAY_STEP_LENGTH) {
+			this.PAD = defaultMood.PAD;
 			return;
 		}
 		
-		// compute unit vector that has right angle to the main axes, so that following it leads to defaultMood
-		double p_step = p_diff / distance;
-		double a_step = a_diff / distance;
-		double d_step = d_diff / distance;
+		// compute the unit vector with length 1 and angle leading to defaultMood
+		Point3D stepVec = diffVec.normalize();
 		
-		// check if computation really resulted in a unit vector
-		assert(round(distance(p_step, a_step, d_step), 2) == 1.0);
-		
-		// don't forget that squaring operations deleted the sign, and with it the traveling direction for each dim
-		// of the unit vector --> indetify correct directions and apply decay.
-		this.P += (p_step * DECAY_STEP_LENGTH);
-		this.A += (a_step * DECAY_STEP_LENGTH);
-		this.D += (d_step * DECAY_STEP_LENGTH);
-		
+		// perform a step if length DECAY_STEP_LENGTH
+		this.PAD = this.PAD.add(stepVec.multiply(DECAY_STEP_LENGTH));
 	}
 	
-	/*
-	 * Given a point in PAD space, computes the distance to the point of origin.
-	 */
-	private double distance(double x, double y, double z) {
-		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
+	public double getP() {
+		return PAD.getX();
 	}
-	
-	/*
-	 * Rounds a double val to n decimal places. 
-	 */
-	private Double round(Double val, int n) {
-	    return new BigDecimal(val.toString()).setScale(n,RoundingMode.HALF_UP).doubleValue();
+
+	public double getA() {
+		return PAD.getY();
 	}
+
+	public double getD() {
+		return PAD.getZ();
+	}
+
 }

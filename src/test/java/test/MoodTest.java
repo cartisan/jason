@@ -44,24 +44,24 @@ public class MoodTest extends TestCase {
 		m.stepDecay(defMood);
 		
 		assertTrue("executed decay step had not the correct length as specified by Mood.DECAY_STEP_LENGTH",
-				   m.P == 0.4);
+				   m.getP() == 0.4);
 		assertTrue("executed decay step had wrong angle",
-				   m.A == 0);
+				   m.getA() == 0);
 		assertTrue("executed decay step had wrong angle",
-				   m.D == 0);
+				   m.getD() == 0);
 		
 		// check that default Mood was not changed
-		assertTrue(defMood.P == 0);
-		assertTrue(defMood.A == 0);
-		assertTrue(defMood.D == 0);
+		assertTrue(defMood.getP() == 0);
+		assertTrue(defMood.getA() == 0);
+		assertTrue(defMood.getD() == 0);
 		
 		// check that default mood is reached when decay_step_length is bigger than distance to default mood
 		Mood m2 = new Mood(0.3, 0.4, 0);		// distance to default mood is 0.5, but step is 0.6
 		m2.stepDecay(defMood);
 		
-		assertTrue(m2.P == defMood.P);
-		assertTrue(m2.A == defMood.A);
-		assertTrue(m2.D == defMood.D);
+		assertTrue(m2.getP() == defMood.getP());
+		assertTrue(m2.getA() == defMood.getA());
+		assertTrue(m2.getD() == defMood.getD());
 		
 		// check that the step length and angle is computed correctly in 2D
 		double stepLength = 0.1;
@@ -69,13 +69,13 @@ public class MoodTest extends TestCase {
 		Mood m3 = new Mood(0.3, 0.4, 0);		// distance to default mood is 0.5, new step is 0.1
 		m3.stepDecay(defMood);
 		
-		assertTrue(m3.P == 0.24);
-		assertTrue(m3.A == 0.32);
-		assertTrue(m3.D == 0);
+		assertTrue(m3.getP() == 0.24);
+		assertTrue(m3.getA() == 0.32);
+		assertTrue(m3.getD() == 0);
 		
 		// make sure that this really means we stepped 0.1
-		assertTrue("decay step executed had not the correct length as specified by Mood.DECAY_STEP_LENGTH",
-				   Math.sqrt(Math.pow(0.3-m3.P, 2) + Math.pow(0.4-m3.A, 2)) == stepLength);
+		assertTrue("decay step executed had not the correct length as specified by Mood.getD()ECAY_STEgetP()_LENGTH",
+				   Math.sqrt(Math.pow(0.3-m3.getP(), 2) + Math.pow(0.4-m3.getA(), 2)) == stepLength);
 	}
 	
 	public void testMoodDecayMaxDecayTime() throws Throwable {
@@ -89,15 +89,15 @@ public class MoodTest extends TestCase {
 		}
 		
 		// 9 iterations are not enough to reach default mood
-		assertFalse(m.P == defMood.P);
-		assertFalse(m.A == defMood.A);
-		assertFalse(m.D == defMood.D);
+		assertFalse(m.getP() == defMood.getP());
+		assertFalse(m.getA() == defMood.getA());
+		assertFalse(m.getD() == defMood.getD());
 		
 		// 10 times is enough
 		m.stepDecay(defMood);
-		assertTrue(m.P == defMood.P);
-		assertTrue(m.A == defMood.A);
-		assertTrue(m.D == defMood.D);
+		assertTrue(m.getP() == defMood.getP());
+		assertTrue(m.getA() == defMood.getA());
+		assertTrue(m.getD() == defMood.getD());
 		
 	}
 }
