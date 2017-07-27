@@ -1,10 +1,13 @@
 package jason.asSemantics;
 
+import java.util.List;
 import java.util.logging.Level;
 
 import jason.JasonException;
 import jason.architecture.AgArch;
 import jason.runtime.Settings;
+
+import jason.asSemantics.AffectiveCircumstance;
 
 public class AffectiveTransitionSystem extends TransitionSystem {
 
@@ -29,7 +32,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     @Override
     protected void applySemanticRuleSense() throws JasonException {
         switch (stepSense) {
-            case "MoodDecay": applyMoodDecay(); break;
+            case "AffectDecay": applyAffectDecay(); break;
             case "DerivePEM": applyDerivePEM(); break;
         default:
             super.applySemanticRuleSense();
@@ -39,7 +42,6 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     @Override
     protected void applySemanticRuleDeliberate() throws JasonException {
         switch (stepDeliberate) {
-            // TODO: add case for emotion decay!
         	case "DeriveSEM":     applyDeriveSEM(); break; 
             case "UpMood":        applyUpMood(); break; 
         default:
@@ -54,9 +56,11 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         this.stepSense = "MoodDecay";
     }
     
-    protected void applyMoodDecay() {
+    protected void applyAffectDecay() {
         this.stepSense = "DerivePEM";
-        // TODO: Implement Mood Decay
+        
+        this.getAffectiveC().getM().stepDecay(this.getAffectiveAg().getDefaultMood());
+        this.getAffectiveC().stepDecayEmotions();
     }
     
     protected void applyDerivePEM() {
@@ -106,9 +110,10 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     }
     
     protected void applyUpMood() {
-        this.stepDeliberate = this.originalStepDeliberate; 
-        
-        // TODO Implement Mood Update
+        this.stepDeliberate = this.originalStepDeliberate;
+
+        List<Emotion> emotions = this.getAffectiveC().getAllEmotions();
+        this.getAffectiveC().getM().updateMood(emotions);
     }
     
     @Override
@@ -128,4 +133,13 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             stepDeliberate = "ProcAct";
         }
     }
+    
+    private AffectiveCircumstance getAffectiveC() {
+        return (AffectiveCircumstance) this.getC();
+    }
+    
+    private AffectiveAgent getAffectiveAg() {
+   		return (AffectiveAgent) this.getAg();
+    }
+    
 }

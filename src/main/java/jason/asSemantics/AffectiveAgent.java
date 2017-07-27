@@ -87,4 +87,8 @@ public class AffectiveAgent extends Agent {
     	this.personality = personality;
     	((AffectiveCircumstance) this.ts.getC()).setMood(this.personality.defaultMood());
     }
+    
+    public Mood getDefaultMood() {
+    	return this.personality.defaultMood();
+    }
 }

@@ -2,6 +2,8 @@ package jason.asSemantics;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class AffectiveCircumstance extends Circumstance {
 
@@ -49,6 +51,39 @@ public class AffectiveCircumstance extends Circumstance {
         }
 	}
 	
+	
+	
+	public List<Emotion> getPEM() {
+		return PEM;
+	}
+
+	public List<Emotion> getSEM() {
+		return SEM;
+	}
+	
+	public List<Emotion> getAllEmotions() {
+		Stream<Emotion> ems = Stream.concat(this.PEM.stream(), this.SEM.stream());
+		return ems.collect(Collectors.toList());
+	}
+
+	public Mood getM() {
+		return M;
+	}
+	
+	public void stepDecayEmotions() {
+		this.PEM = stepDecayEmotions(this.getPEM());
+		this.SEM = stepDecayEmotions(this.getSEM());
+	}
+	
+	private List<Emotion> stepDecayEmotions(List<Emotion> ems) {
+		LinkedList<Emotion> newEms = new LinkedList<>();
+		for (Emotion em: ems){
+			em.stepDecay();
+			if(em.intensity > 0) newEms.add(em);
+		}
+		return newEms;
+	}
+
 	private void createMood(AffectiveAgent ag) {
 		// Usually, at this point this ag will have default personality, when personality gets changed during ag init
 		// Agent class will take care of updating circumstance' mood
