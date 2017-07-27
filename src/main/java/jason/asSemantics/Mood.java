@@ -1,10 +1,12 @@
 package jason.asSemantics;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.logging.Logger;
+
 import javafx.geometry.Point3D;
 
 
@@ -21,10 +23,13 @@ public class Mood implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	// defines how many decay steps are needed at most for a mood to return to default mood
-	public static int MAX_DECAY_TIME = 10;
+	// mood updates are performed two times as fast as the decay, this also influences UPDATE_STEP_LENGTH
+	private static int MAX_DECAY_TIME = 10;
 	private static double DECAY_STEP_LENGTH; 	// gets set to ~0.35 if MAX_DECAY_TIME is 10
+	private static double UPDATE_STEP_LENGTH;	// gets set to ~0.7 if MAX_DECAY_TIME is 10, 
+												// results in 0.404 step in each dim
 	static {
-		// executed at class loading time to initialize DECAY_STEP_LENGTH 
+		// executed at class loading time to initialize DECAY_STEP_LENGTH and UPDATE_STEP_LENGTH 
 		setMaxDecayTime(MAX_DECAY_TIME);
 	}
 
@@ -35,6 +40,7 @@ public class Mood implements Serializable {
 		// we want a mood to completely decay back to default mood in at most 10 cycles
 		// --> one step should be d_max / 10 = 0.35
 		DECAY_STEP_LENGTH = Math.sqrt(12) / maxDecayTime;
+		UPDATE_STEP_LENGTH = DECAY_STEP_LENGTH * 2;
 	}
 	
 	
@@ -49,7 +55,7 @@ public class Mood implements Serializable {
 			logger.warning("One of the Mood parameters exceeds the bounds (-1.0 < x < 1.0).");
 			throw new IllegalArgumentException("One of the Mood parameters exceeds the bounds (-1.0 < x < 1.0).");
 		}
-//		this.P=p; this.A=a; this.D=d;
+
 		this.PAD = new Point3D(p, a, d);
 	}
 	
@@ -58,9 +64,41 @@ public class Mood implements Serializable {
 	}
 
 	public void updateMood(List<Emotion> emotions) {
-		// TODO: methods stub
+		List<Double> step = new LinkedList<Double>();
+		double oneDimStep = Math.sqrt(Math.pow(UPDATE_STEP_LENGTH, 2)/3); 	// root(3*dim_step²) = UPDATE_STEP_LENGTH  
+		
+		Point3D emotionCenter = Emotion.findEmotionCenter(emotions);
+		double averageIntensity = emotions.stream().mapToDouble( e -> e.intensity).average().getAsDouble();
+		assert(1==averageIntensity);		// we don't yet support non-binary intensities
+		
+		// each coordinate moves further into the octant where the emotion center is located
+		List<Function<Point3D, Double>> dimensions = Arrays.asList(Point3D::getX, Point3D::getY, Point3D::getZ);
+		for(Function<Point3D, Double> getFunc : dimensions) {
+			double emCenter_coord = getFunc.apply(emotionCenter);
+			Double direction = Math.signum(emCenter_coord);		
+			step.add(direction * oneDimStep * averageIntensity);
+		}
+		
+		// compute new Mood, take bounds into account
+		assert(3==step.size());
+		Point3D stepVec = new Point3D(step.get(0),
+				   					  step.get(1),
+				   					  step.get(2));
+		
+		this.PAD = ensureBounds(this.PAD.add(stepVec));
 	}
 	
+	/*
+	 * Returns new 3d point equal to pad if all three dimensions are within (-1,1) range.
+	 * If pad contains values outside this range, they are truncated in the return value. 
+	 */
+	private Point3D ensureBounds(Point3D pad) {
+		Function<Double,Double> limit = val -> Math.max(-1.0, Math.min(val, 1.0));  
+		
+		return new Point3D(limit.apply((pad.getX())),
+						   limit.apply((pad.getY())),
+						   limit.apply((pad.getZ())));
+	}
 	
 	/*
 	 * Applies one decay step, which moves this mood closer to defaultMood.
