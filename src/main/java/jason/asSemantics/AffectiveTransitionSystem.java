@@ -7,15 +7,12 @@ import jason.JasonException;
 import jason.architecture.AgArch;
 import jason.runtime.Settings;
 
-import jason.asSemantics.AffectiveCircumstance;
-
 public class AffectiveTransitionSystem extends TransitionSystem {
-
     private String originalStepDeliberate = "";
 
     AffectiveTransitionSystem(Agent a, Circumstance c, Settings s, AgArch ar) {
-    	super(a, c, s, ar);
-    	init();
+        super(a, c, s, ar);
+        init();
     }
     
     AffectiveTransitionSystem(TransitionSystem ts) {
@@ -24,13 +21,14 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     }
     
     private void init() {
-    	AffectiveCircumstance affC = new AffectiveCircumstance(this.getC(), (AffectiveAgent) this.getAg());
-    	this.C = affC;
-    	affC.setTS(this);
+        AffectiveCircumstance affC = new AffectiveCircumstance(this.getC(), (AffectiveAgent) this.getAg());
+        this.C = affC;
+        affC.setTS(this);
     }
     
     @Override
     protected void applySemanticRuleSense() throws JasonException {
+        getLogger().fine(this.toString() + " sense step: " + stepSense);
         switch (stepSense) {
             case "AffectDecay": applyAffectDecay(); break;
             case "DerivePEM": applyDerivePEM(); break;
@@ -41,8 +39,9 @@ public class AffectiveTransitionSystem extends TransitionSystem {
 
     @Override
     protected void applySemanticRuleDeliberate() throws JasonException {
+        getLogger().fine(this.toString() + " deliberate step: " + stepSense);
         switch (stepDeliberate) {
-        	case "DeriveSEM":     applyDeriveSEM(); break; 
+            case "DeriveSEM":     applyDeriveSEM(); break; 
             case "UpMood":        applyUpMood(); break; 
         default:
             super.applySemanticRuleDeliberate();  
@@ -53,7 +52,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     @Override
     protected void applyProcMsg() throws JasonException {
         super.applyProcMsg();
-        this.stepSense = "MoodDecay";
+        this.stepSense = "AffectDecay";
     }
     
     protected void applyAffectDecay() {
@@ -105,8 +104,11 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         // TODO: Implement SEM derivation
         // takes into account C.RP
         
-        // if there are PEM or SEM, otherwise stepSense = originalStepDeliberate 
-        this.stepDeliberate = "UpMood";
+        // if there are PEM or SEM, update mood, otherwise stepDeliberate = originalStepDeliberate 
+        if(getAffectiveC().getAllEmotions().size() > 0)
+            this.stepDeliberate = "UpMood";
+        else 
+            this.stepDeliberate = this.originalStepDeliberate;
     }
     
     protected void applyUpMood() {
@@ -134,12 +136,12 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         }
     }
     
-    private AffectiveCircumstance getAffectiveC() {
+    protected AffectiveCircumstance getAffectiveC() {
         return (AffectiveCircumstance) this.getC();
     }
     
-    private AffectiveAgent getAffectiveAg() {
-   		return (AffectiveAgent) this.getAg();
+    protected AffectiveAgent getAffectiveAg() {
+        return (AffectiveAgent) this.getAg();
     }
     
 }
