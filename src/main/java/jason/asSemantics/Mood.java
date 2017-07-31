@@ -25,8 +25,8 @@ public class Mood implements Serializable {
 	// defines how many decay steps are needed at most for a mood to return to default mood
 	// mood updates are performed two times as fast as the decay, this also influences UPDATE_STEP_LENGTH
 	private static int MAX_DECAY_TIME = 10;
-	private static double DECAY_STEP_LENGTH; 	// gets set to ~0.35 if MAX_DECAY_TIME is 10
-	private static double UPDATE_STEP_LENGTH;	// gets set to ~0.7 if MAX_DECAY_TIME is 10, 
+	private static double DECAY_STEP_LENGTH;	// gets set to ~0.35 if MAX_DECAY_TIME is 10
+	private static double UPDATE_STEP_LENGTH;   // gets set to ~0.7 if MAX_DECAY_TIME is 10, 
 												// results in 0.404 step in each dim
 	static {
 		// executed at class loading time to initialize DECAY_STEP_LENGTH and UPDATE_STEP_LENGTH 
@@ -65,7 +65,7 @@ public class Mood implements Serializable {
 
 	public void updateMood(List<Emotion> emotions) {
 		List<Double> step = new LinkedList<Double>();
-		double oneDimStep = Math.sqrt(Math.pow(UPDATE_STEP_LENGTH, 2)/3); 	// root(3*dim_step²) = UPDATE_STEP_LENGTH  
+		double oneDimStep = Math.sqrt(Math.pow(UPDATE_STEP_LENGTH, 2)/3);	// root(3*dim_step²) = UPDATE_STEP_LENGTH  
 		
 		Point3D emotionCenter = Emotion.findEmotionCenter(emotions);
 		double averageIntensity = emotions.stream().mapToDouble( e -> e.intensity).average().getAsDouble();
@@ -75,15 +75,15 @@ public class Mood implements Serializable {
 		List<Function<Point3D, Double>> dimensions = Arrays.asList(Point3D::getX, Point3D::getY, Point3D::getZ);
 		for(Function<Point3D, Double> getFunc : dimensions) {
 			double emCenter_coord = getFunc.apply(emotionCenter);
-			Double direction = Math.signum(emCenter_coord);		
+			Double direction = Math.signum(emCenter_coord);	 
 			step.add(direction * oneDimStep * averageIntensity);
 		}
 		
 		// compute new Mood, take bounds into account
 		assert(3==step.size());
 		Point3D stepVec = new Point3D(step.get(0),
-				   					  step.get(1),
-				   					  step.get(2));
+									  step.get(1),
+									  step.get(2));
 		
 		this.PAD = ensureBounds(this.PAD.add(stepVec));
 	}
