@@ -142,21 +142,21 @@ public class MoodTest extends TestCase {
 
         // case: complete pull
         Mood m = new Mood(0, 0, 0);
-        m.updateMood(Arrays.asList(Emotion.GRATITUDE)); // GRATITUDE(0.4, 0.2,
+        m.updateMood(Arrays.asList(Emotion.getEmotion("GRATITUDE"))); // GRATITUDE(0.4, 0.2,
                                                         // -0.3)
         assertEquals(0.1, m.getP());
         assertEquals(0.1, m.getA());
         assertEquals(-0.1, m.getD());
 
         // round to the first 5 decimals, to avoid small imprecision due to sqrt
-        m.updateMood(Arrays.asList(Emotion.GRATITUDE));
+        m.updateMood(Arrays.asList(Emotion.getEmotion("GRATITUDE")));
         assertEquals(0.2, round(m.getA())); // Mood.A reaches emCenter.A, next
                                             // step should push
 
-        m.updateMood(Arrays.asList(Emotion.GRATITUDE));
+        m.updateMood(Arrays.asList(Emotion.getEmotion("GRATITUDE")));
         assertEquals(0.3, round(m.getA())); // test that equality of.A pushed
 
-        m.updateMood(Arrays.asList(Emotion.GRATITUDE));
+        m.updateMood(Arrays.asList(Emotion.getEmotion("GRATITUDE")));
         assertEquals(0.4, round(m.getP()));
         assertEquals(0.4, round(m.getA())); // test that beyond A pushed, too
         assertEquals(-0.4, round(m.getD()));
@@ -169,8 +169,8 @@ public class MoodTest extends TestCase {
 
         // case: complete pull
         Mood m = new Mood(1, 1, 1);
-        m.updateMood(Arrays.asList(Emotion.GRATITUDE)); // GRATITUDE(0.4, 0.2,
-                                                        // -0.3)
+        m.updateMood(Arrays.asList(Emotion.getEmotion("GRATITUDE"))); // GRATITUDE(0.4, 0.2,
+                                                        			  // -0.3)
         assertEquals(1.0, m.getP());
         assertEquals(1.0, m.getA());
         assertEquals(0.9, m.getD());

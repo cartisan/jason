@@ -137,7 +137,7 @@ public class Mood implements Serializable {
     
     @Override
     public String toString() {
-        return String.format("(%f, %f, %f)", PAD.getX(), PAD.getY(), PAD.getZ());
+        return String.format("(%.2f, %.2f, %.2f)", PAD.getX(), PAD.getY(), PAD.getZ());
     }
 
 }

@@ -1,10 +1,16 @@
 package jason.asSemantics;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 
 import jason.JasonException;
 import jason.architecture.AgArch;
+import jason.asSyntax.ASSyntax;
+import jason.asSyntax.ListTerm;
+import jason.asSyntax.Literal;
+import jason.asSyntax.Term;
+import jason.asSyntax.parser.ParseException;
 import jason.runtime.Settings;
 
 public class AffectiveTransitionSystem extends TransitionSystem {
@@ -62,9 +68,25 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         this.getAffectiveC().stepDecayEmotions();
     }
     
-    protected void applyDerivePEM() {
+    protected void applyDerivePEM() throws JasonException {
         this.stepSense = "SelEv";
-        // TODO: Implement PEM derivation
+        
+        Iterator<Literal> perceptsIt = this.getAg().getBB().getPercepts();
+        
+        while (perceptsIt.hasNext()) {
+            Literal percept = perceptsIt.next();
+            
+            // get all terms of form ´emotion(X)´ in annotations, or empty list if none present
+            ListTerm emotions = percept.getAnnots("emotion");
+            for(Term emotionTerm: emotions) {
+                try {
+                    String emotion = ASSyntax.parseLiteral(emotionTerm.toString()).getTerm(0).toString(); //gets X from ´emotion(X)´
+                    this.getAffectiveC().PEM.add(Emotion.getEmotion(emotion));
+                } catch (ParseException e) {
+                    throw new JasonException(e.getMessage());
+                }  
+            }
+        }
     }
     
     /* ------ Deliberate States ------------ */

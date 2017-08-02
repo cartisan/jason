@@ -1,6 +1,8 @@
 package jason.asSemantics;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.function.Supplier;
 
 import javafx.geometry.Point3D;
 
@@ -13,18 +15,39 @@ import javafx.geometry.Point3D;
  * [2] Gebhard, P. (2005). ALMA: a layered model of affect. In Proceedings of the fourth international joint
  *     conference on Autonomous agents and multiagent systems, pages 29–36, New York, USA. ACM.
  */
-public enum Emotion {
-    // TODO: Complete list of emotions
-    ANGER(-0.51, 0.59, 0.25),
-    DISAPPOINTMENT(-0.3, 0.1, -0.4),
-    GRATITUDE(0.4, 0.2, -0.3),
-    SATISFACTION(0.3, -0.2, 0.4);
+public class Emotion {
+    static public HashMap<String, Supplier<Emotion>> EMOTIONS = new HashMap<>();
+    
+    static {
+        // TODO: Complete list of emotions
+        EMOTIONS.put("ANGER",           () -> new Emotion(-0.51, 0.59, 0.25, "anger"));
+        EMOTIONS.put("DISAPPOINTMENT",  () -> new Emotion(-0.3, 0.1, -0.4, "disapointment"));
+        EMOTIONS.put("GRATITUDE",       () -> new Emotion(0.4, 0.2, -0.3, "gratitude"));
+        EMOTIONS.put("SATISFACTION",    () -> new Emotion(0.3, -0.2, 0.4, "satisfaction"));
+        EMOTIONS.put("JOY",             () -> new Emotion(0.4, 0.2, 0.1, "joy"));
+    }
 
     public final Point3D PAD;
+    public final String name;
     public double intensity; // intensity not really supported, it's either there (1) or decayed (0)
+    
+    public static Point3D findEmotionCenter(List<Emotion> emotions) {
+        // Functional solution for brevity, time complexity in o(3n)
+        // FIXME: Convert to single for-loop in case of performance issues
+        double averageP = emotions.stream().mapToDouble(Emotion::getP).average().getAsDouble();
+        double averageA = emotions.stream().mapToDouble(Emotion::getA).average().getAsDouble();
+        double averageD = emotions.stream().mapToDouble(Emotion::getD).average().getAsDouble();
+        
+        return new Point3D(averageP, averageA, averageD);
+    }
 
-    Emotion(double p, double a, double d) {
+    public static Emotion getEmotion(String emotion) {
+        return EMOTIONS.get(emotion.toUpperCase()).get();
+    }
+    
+    public Emotion(double p, double a, double d, String name) {
         this.PAD = new Point3D(p, a, d);
+        this.name= name;
 
         // Intensity currently not really supported
         // ideally, intensity is set by appraisal function
@@ -49,23 +72,13 @@ public enum Emotion {
     public double getD() {
         return PAD.getZ();
     }
-
-    public static Point3D findEmotionCenter(List<Emotion> emotions) {
-        // Functional solution for brevity, time complexity in o(3n)
-        // FIXME: Convert to single for-loop in case of performance issues
-        double averageP = emotions.stream().mapToDouble(Emotion::getP).average().getAsDouble();
-        double averageA = emotions.stream().mapToDouble(Emotion::getA).average().getAsDouble();
-        double averageD = emotions.stream().mapToDouble(Emotion::getD).average().getAsDouble();
-
-        return new Point3D(averageP, averageA, averageD);
-    }
     
     @Override
     public String toString() {
-        return String.format("(%f, %f, %f)", PAD.getX(), PAD.getY(), PAD.getZ());
+        return String.format("(%.2f, %.2f, %.2f)", PAD.getX(), PAD.getY(), PAD.getZ());
     }
     
     public String getName() {
-        return this.name().toLowerCase();
+        return this.name;
     }
 }
