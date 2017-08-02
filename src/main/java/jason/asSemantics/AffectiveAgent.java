@@ -15,85 +15,85 @@ import jason.asSemantics.AffectiveTransitionSystem;
  */
 public class AffectiveAgent extends Agent {
 
-	private Personality personality;
+    private Personality personality;
 
-	public AffectiveAgent() {
-		super();
-		this.personality = Personality.createDefaultPersonality();
-	}
+    public AffectiveAgent() {
+        super();
+        this.personality = Personality.createDefaultPersonality();
+    }
 
-	@Override
-	public void initAg() {
-		ts = new AffectiveTransitionSystem(this.ts);  // the TransitionSystem sets this.ts to itself in its own init
-		super.initAg();
-	}
+    @Override
+    public void initAg() {
+        ts = new AffectiveTransitionSystem(this.ts);  // the TransitionSystem sets this.ts to itself in its own init
+        super.initAg();
+    }
 
-	/**
-	 * Clone BB, PL, Circumstance. A new TS is created (based on the cloned
-	 * circumstance).
-	 */
-	@Override
-	public AffectiveAgent clone(AgArch arch) {
-		AffectiveAgent a = null;
-		try {
-			a = this.getClass().newInstance();
-		} catch (InstantiationException e1) {
-			logger.severe(" cannot create derived class" + e1);
-			return null;
-		} catch (IllegalAccessException e2) {
-			logger.severe(" cannot create derived class" + e2);
-			return null;
-		}
+    /**
+     * Clone BB, PL, Circumstance. A new TS is created (based on the cloned
+     * circumstance).
+     */
+    @Override
+    public AffectiveAgent clone(AgArch arch) {
+        AffectiveAgent a = null;
+        try {
+            a = this.getClass().newInstance();
+        } catch (InstantiationException e1) {
+            logger.severe(" cannot create derived class" + e1);
+            return null;
+        } catch (IllegalAccessException e2) {
+            logger.severe(" cannot create derived class" + e2);
+            return null;
+        }
 
-		a.setLogger(arch);
-		if (this.getTS().getSettings().verbose() >= 0)
-			a.logger.setLevel(this.getTS().getSettings().logLevel());
+        a.setLogger(arch);
+        if (this.getTS().getSettings().verbose() >= 0)
+            a.logger.setLevel(this.getTS().getSettings().logLevel());
 
-		synchronized (getBB().getLock()) {
-			a.bb = this.bb.clone();
-		}
-		a.pl = this.pl.clone();
-		try {
-			fixAgInIAandFunctions(a);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		a.aslSource = this.aslSource;
-		a.setInternalActions(new HashMap<String, InternalAction>());
+        synchronized (getBB().getLock()) {
+            a.bb = this.bb.clone();
+        }
+        a.pl = this.pl.clone();
+        try {
+            fixAgInIAandFunctions(a);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        a.aslSource = this.aslSource;
+        a.setInternalActions(new HashMap<String, InternalAction>());
 
-		a.setTS(new AffectiveTransitionSystem(a, this.getTS().getC().clone(), this.getTS().getSettings(), arch));
-		if (a.getPL().hasMetaEventPlans())
-			a.getTS().addGoalListener(new GoalListenerForMetaEvents(a.getTS()));
+        a.setTS(new AffectiveTransitionSystem(a, this.getTS().getC().clone(), this.getTS().getSettings(), arch));
+        if (a.getPL().hasMetaEventPlans())
+            a.getTS().addGoalListener(new GoalListenerForMetaEvents(a.getTS()));
 
-		a.initAg(); // for initDefaultFunctions() and for overridden/custom agent
-		return a;
-	}
+        a.initAg(); // for initDefaultFunctions() and for overridden/custom agent
+        return a;
+    }
 
-	public Personality getPersonality() {
-		return personality;
-	}
-	
-	public AffectiveTransitionSystem getAffectTS() {
-		return (AffectiveTransitionSystem) this.ts;
-	}
+    public Personality getPersonality() {
+        return personality;
+    }
+    
+    public AffectiveTransitionSystem getAffectTS() {
+        return (AffectiveTransitionSystem) this.ts;
+    }
 
-	/**
-	 * Used to set an AffectiveAgent's personality during initialization. On
-	 * creation, AffectiveAgent will have a neutral personality, this method
-	 * should be used to set it up. It automatcally takes care of updating all
-	 * personality-related values in relevant for the reasoning cycle.
-	 * 
-	 * Do not use this to change an agents personality after the inizialization
-	 * phase.
-	 * 
-	 * @param personality
-	 */
-	public void initializePersonality(Personality personality) {
-		this.personality = personality;
-		((AffectiveCircumstance) this.ts.getC()).setMood(this.personality.defaultMood());
-	}
+    /**
+     * Used to set an AffectiveAgent's personality during initialization. On
+     * creation, AffectiveAgent will have a neutral personality, this method
+     * should be used to set it up. It automatcally takes care of updating all
+     * personality-related values in relevant for the reasoning cycle.
+     * 
+     * Do not use this to change an agents personality after the inizialization
+     * phase.
+     * 
+     * @param personality
+     */
+    public void initializePersonality(Personality personality) {
+        this.personality = personality;
+        ((AffectiveCircumstance) this.ts.getC()).setMood(this.personality.defaultMood());
+    }
 
-	public Mood getDefaultMood() {
-		return this.personality.defaultMood();
-	}
+    public Mood getDefaultMood() {
+        return this.personality.defaultMood();
+    }
 }
