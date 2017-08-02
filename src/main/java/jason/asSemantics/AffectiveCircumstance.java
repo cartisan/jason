@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 public class AffectiveCircumstance extends Circumstance {
 
     private static final long serialVersionUID = 1L;
@@ -114,5 +117,29 @@ public class AffectiveCircumstance extends Circumstance {
         builder.append("  M ="+M +"\n");
 
         return builder.toString();
+    }
+    
+    @Override
+    public Element getAsDOM(Document document) {
+        Element c = super.getAsDOM(document);
+        
+        // add affective state to circumstance, e.g.
+        //<affect mood="(0, 0.5, -0.7)">
+        //  <emotion pad="(-0.3, 0.1, -0.4)" name="DISAPPOINTMENT"></emotion>
+        //  <emotion pad="(0.4, 0.2, -0.3)" name="GRATITUDE"></emotion>
+        //</affect>
+        Element affect = document.createElement("affect");
+        affect.setAttribute("mood", getM().toString());
+        
+        for(Emotion e: this.getAllEmotions()) {
+            Element emotion = document.createElement("emotion");
+            emotion.setAttribute("pad", e.toString());
+            emotion.setAttribute("name", e.getName());
+            affect.appendChild(emotion);
+        }
+        
+        c.appendChild(affect);
+        
+        return c;
     }
 }

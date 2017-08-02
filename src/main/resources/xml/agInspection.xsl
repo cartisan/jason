@@ -22,6 +22,7 @@
     <xsl:param name="string" select="'rgb(0, 0, 250)'" />
     
     <xsl:param name="show-bels"    select="'true'" />
+    <xsl:param name="show-affect"  select="'true'" />
     <xsl:param name="show-annots"  select="'true'" />
     <xsl:param name="show-rules"   select="'true'" />
     <xsl:param name="show-evt"     select="'true'" />
@@ -46,6 +47,7 @@
             <table border="0" cellspacing="3" cellpadding="6" >
                 
                 <xsl:apply-templates select="beliefs" />
+                <xsl:apply-templates select="circumstance/affect" />
                 <xsl:apply-templates select="circumstance/mailbox" />
                 <xsl:apply-templates select="circumstance/events" />
                 <xsl:apply-templates select="circumstance/options" />
@@ -154,6 +156,47 @@
                 </xsl:if>
             </tr>
         </xsl:if>
+    </xsl:template>
+
+    <xsl:template match="affect">
+        <tr style="{$trh-style}">
+            <xsl:call-template name="hideshow">
+                <xsl:with-param name="show" select="$show-affect" />
+                <xsl:with-param name="item" select="'affect'" />
+                <xsl:with-param name="ds" select="'Affect'" />
+            </xsl:call-template>
+            <xsl:if test="$show-affect='true'">
+                <td style="{$td-style}"><hr/>
+                    <table cellspacing="0" cellpadding="3">
+                        <tr style="{$trh-style}">
+                            <td valign="top" style="{$th-style2}">Mood</td>
+                            <td valign="top" style="{$td-style}">
+                                <xsl:value-of select="@mood" />                            
+                            </td>
+                            <td valign="top" style="{$td-style2}"> </td>
+                        </tr>
+                        <tr style="{$trh-style}">
+                            <td valign="top" style="{$th-style2}">Emotions </td>
+                            <td valign="top" style="{$td-style}"> </td>
+                            <td valign="top" style="{$td-style}"> </td>
+                        </tr>                        
+                        <xsl:apply-templates />
+                    </table>
+                </td>
+            </xsl:if>
+        </tr>
+    </xsl:template>
+    
+    <xsl:template match="emotion">
+        <tr style="{$trh-style}">
+            <td valign="top" style="{$td-style}"> </td>
+            <td valign="top" style="{$td-style}">
+                <xsl:value-of select="@pad" />
+            </td>
+            <td valign="top" style="{$td-style}">
+                <xsl:value-of select="@name" />
+            </td>            
+        </tr>
     </xsl:template>
     
     <xsl:template match="mailbox">
@@ -317,7 +360,7 @@
             <th valign="top" style="{$th-style}"><hr/>
             Actions</th>
             <td valign="top" style="{$td-style}"><hr/>
-                <table ellspacing="0" cellpadding="3">
+                <table cellspacing="0" cellpadding="3">
                     <tr style="{$trh-style}">
                         <th valign="top" style="{$th-style2}">Pend</th>
                         <th valign="top" style="{$th-style2}">Feed</th>
@@ -374,7 +417,7 @@
             </xsl:call-template>
             <xsl:if test="$show-plan='true'">
                 <td><hr/>
-                    <table ellspacing="0" cellpadding="3">
+                    <table cellspacing="0" cellpadding="3">
                         <tr style="{$trh-style}">
                             <!--th valign="top" style="{$th-style2}">Rel</th-->
                             <th valign="top" style="{$th-style2}">App</th>

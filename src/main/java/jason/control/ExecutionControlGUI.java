@@ -276,6 +276,7 @@ public class ExecutionControlGUI extends ExecutionControl {
         });
         
         show.put("bels", true);
+        show.put("affect", false);
         show.put("rules", false);
         show.put("evt", true);
         show.put("mb", false);
