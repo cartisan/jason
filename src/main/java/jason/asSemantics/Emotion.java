@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 
 import javafx.geometry.Point3D;
 
-/*
+/**
  * Represents the emotions from the OCC catalog [1] and represents them in the PAD space using the mapping derived by 
  * [2].
  * 
@@ -32,9 +32,10 @@ public class Emotion {
     public double intensity; // intensity not really supported, it's either there (1) or decayed (0)
     
     public static Point3D findEmotionCenter(List<Emotion> emotions) {
-        // Functional solution for brevity, time complexity in o(3n)
-        // FIXME: Convert to single for-loop in case of performance issues
-        double averageP = emotions.stream().mapToDouble(Emotion::getP).average().getAsDouble();
+        /* Functional solution for brevity, time complexity in o(3n)
+         * Convert to single for-loop in case of performance issues */ 
+
+    	double averageP = emotions.stream().mapToDouble(Emotion::getP).average().getAsDouble();
         double averageA = emotions.stream().mapToDouble(Emotion::getA).average().getAsDouble();
         double averageD = emotions.stream().mapToDouble(Emotion::getD).average().getAsDouble();
         
@@ -55,9 +56,9 @@ public class Emotion {
     }
 
     public void stepDecay() {
-        // ideally emotion decays {linear, exponentially, tan hyperbolic} over time
-        // See: Gebhard P., Kipp M., Klesen M., Rist T. Adding the Emotional Dimension to Scripting Character Dialogues
-        // In: Proc. of the 4th International Working Conference on Intelligent Virtual Agents (IVA'03), 2003, 48-56.
+        /* ideally emotion decays {linear, exponentially, tan hyperbolic} over time
+         * See: Gebhard P., Kipp M., Klesen M., Rist T. Adding the Emotional Dimension to Scripting Character Dialogues
+         * In: Proc. of the 4th International Working Conference on Intelligent Virtual Agents (IVA'03), 2003, 48-56. */
         this.intensity = 0;
     }
 

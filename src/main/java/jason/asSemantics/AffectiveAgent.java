@@ -5,7 +5,7 @@ import java.util.HashMap;
 import jason.architecture.AgArch;
 import jason.asSemantics.AffectiveTransitionSystem;
 
-/*
+/**
  *  A subclass of jason.asSemantics.Agent that employs personality aware affective reasoning according to O3A.
  *  This reasoning cycle is implemented in the AffectiveTransitionSystem, a subclass of Transition System. The present
  *  class changes the initialization and cloning methods of its super class in order to inject the new TransitionSystem.

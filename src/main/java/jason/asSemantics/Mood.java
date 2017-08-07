@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 import javafx.geometry.Point3D;
 
 
-/*
+/**
  * Stores an Affective Agent's mood using the PAD space model with the dimensions:
  *  pleasure, arousal, dominance.
  * Dimensions are represented using scalar double values in the range -1.0 <= x <= 1.0
@@ -88,7 +88,7 @@ public class Mood implements Serializable {
         this.PAD = ensureBounds(this.PAD.add(stepVec));
     }
     
-    /*
+    /**
      * Returns new 3d point equal to pad if all three dimensions are within (-1,1) range.
      * If pad contains values outside this range, they are truncated in the return value. 
      */
@@ -100,7 +100,7 @@ public class Mood implements Serializable {
                            limit.apply((pad.getZ())));
     }
     
-    /*
+    /**
      * Applies one decay step, which moves this mood closer to defaultMood.
      * Each step shifts this mood 1 x DECAY_STEP_LENGTH in a 3D space. If the distance to defaultMood is smaller
      * than that, this mood is set to defaultMood instead. Method computes unit vector from this in the direction
