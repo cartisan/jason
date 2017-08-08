@@ -35,7 +35,7 @@ public class Emotion {
         /* Functional solution for brevity, time complexity in o(3n)
          * Convert to single for-loop in case of performance issues */ 
 
-    	double averageP = emotions.stream().mapToDouble(Emotion::getP).average().getAsDouble();
+        double averageP = emotions.stream().mapToDouble(Emotion::getP).average().getAsDouble();
         double averageA = emotions.stream().mapToDouble(Emotion::getA).average().getAsDouble();
         double averageD = emotions.stream().mapToDouble(Emotion::getD).average().getAsDouble();
         

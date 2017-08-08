@@ -80,13 +80,13 @@ public class AffectiveAgent extends Agent {
     /**
      * Used to set an AffectiveAgent's personality during initialization. On
      * creation, AffectiveAgent will have a neutral personality, this method
-     * should be used to set it up. It automatcally takes care of updating all
+     * should be used to set it up. It automatically takes care of updating all
      * personality-related values in relevant for the reasoning cycle.
      * 
-     * Do not use this to change an agents personality after the inizialization
+     * Do not use this to change an agents personality after the initialization
      * phase.
      * 
-     * @param personality
+     * @param personality A personality instance that will be used by the agent's reasoning cycle
      */
     public void initializePersonality(Personality personality) {
         this.personality = personality;

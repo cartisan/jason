@@ -170,7 +170,7 @@ public class MoodTest extends TestCase {
         // case: complete pull
         Mood m = new Mood(1, 1, 1);
         m.updateMood(Arrays.asList(Emotion.getEmotion("GRATITUDE"))); // GRATITUDE(0.4, 0.2,
-                                                        			  // -0.3)
+                                                                      // -0.3)
         assertEquals(1.0, m.getP());
         assertEquals(1.0, m.getA());
         assertEquals(0.9, m.getD());

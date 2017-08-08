@@ -158,11 +158,11 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         }
     }
     
-    protected AffectiveCircumstance getAffectiveC() {
+    public AffectiveCircumstance getAffectiveC() {
         return (AffectiveCircumstance) this.getC();
     }
     
-    protected AffectiveAgent getAffectiveAg() {
+    public AffectiveAgent getAffectiveAg() {
         return (AffectiveAgent) this.getAg();
     }
     
