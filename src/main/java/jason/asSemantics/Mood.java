@@ -23,11 +23,20 @@ public class Mood implements Serializable {
     private static final long serialVersionUID = 1L;
 
     // defines how many decay steps are needed at most for a mood to return to default mood
-    // mood updates are performed two times as fast as the decay, this also influences UPDATE_STEP_LENGTH
+    // mood updates are performed two times as fast as the decay, so this also influences UPDATE_STEP_LENGTH
     private static int MAX_DECAY_TIME = 10;
     private static double DECAY_STEP_LENGTH;    // gets set to ~0.35 if MAX_DECAY_TIME is 10
     private static double UPDATE_STEP_LENGTH;   // gets set to ~0.7 if MAX_DECAY_TIME is 10, 
                                                 // results in 0.404 step in each dim
+    
+                                                // -P-A-D  +P-A-D
+                                                //  |  +A   |   +A
+                                                //  |+D |+D |+D |+D  
+                                                //  | | | | | | | | 
+                                                //  [0|1|2|3|4|5|6|7]
+    private static final String[] MOOD_NAMES= {"bored", "disdainful", "anxious", "hostile",      // -P 
+                                               "docile","relaxed",    "dependent", "exuberant"}; // +P
+    
     static {
         // executed at class loading time to initialize DECAY_STEP_LENGTH and UPDATE_STEP_LENGTH 
         setMaxDecayTime(MAX_DECAY_TIME);
@@ -40,7 +49,7 @@ public class Mood implements Serializable {
         // we want a mood to completely decay back to default mood in at most 10 cycles
         // --> one step should be d_max / 10 = 0.35
         DECAY_STEP_LENGTH = Math.sqrt(12) / maxDecayTime;
-        UPDATE_STEP_LENGTH = DECAY_STEP_LENGTH * 2;
+        UPDATE_STEP_LENGTH = DECAY_STEP_LENGTH * 5;
     }
     
     
@@ -137,7 +146,31 @@ public class Mood implements Serializable {
     
     @Override
     public String toString() {
-        return String.format("(%.2f, %.2f, %.2f)", PAD.getX(), PAD.getY(), PAD.getZ());
+        return String.format("(%.4f, %.4f, %.4f)", PAD.getX(), PAD.getY(), PAD.getZ()) + this.getName();
+    }
+    
+    /**
+     * The types of a mood depend on which octant of the PAD space it is located in and are defined by
+     * (Gebhard 2005). They are stored in the array MOOD_NAMES, at index 4*P + 2*A + D, with P, A, D
+     * being either 1 (x>=0) or 0 (else).
+     * The strength of a mood depends on its distance to the zero-point: slightly, moderately, fully; with
+     * the borders being determined by splitting the maximal distance into thirds.   
+     * @return The name of the mood
+     */
+    public String getName() {
+        Function<Double,Integer> pos = d -> (d >= 0 ? 1 : 0);  // returns 1 if d is positive, else 0
+        int index = 4 * pos.apply(getP()) + 2 * pos.apply(getA()) + 1* pos.apply(getD());
+        String type = MOOD_NAMES[index];
+        
+        double max_dist = Math.sqrt(3); String strength;
+        if(this.PAD.magnitude() >= max_dist / 3 * 2)  
+            strength = "fully";
+        else if(this.PAD.magnitude() >= max_dist / 3) 
+            strength = "moderately";
+        else 
+            strength = "slightly";
+        
+        return strength + " " + type;
     }
 
 }
