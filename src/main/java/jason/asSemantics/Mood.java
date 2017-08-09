@@ -23,11 +23,13 @@ public class Mood implements Serializable {
     private static final long serialVersionUID = 1L;
 
     // defines how many decay steps are needed at most for a mood to return to default mood
-    // mood updates are performed two times as fast as the decay, so this also influences UPDATE_STEP_LENGTH
-    private static int MAX_DECAY_TIME = 10;
-    private static double DECAY_STEP_LENGTH;    // gets set to ~0.35 if MAX_DECAY_TIME is 10
-    private static double UPDATE_STEP_LENGTH;   // gets set to ~0.7 if MAX_DECAY_TIME is 10, 
-                                                // results in 0.404 step in each dim
+    // mood updates are performed UPDATE_2_DECAY_RATIO times as fast as the decay, so this also influences 
+    // UPDATE_STEP_LENGTH
+    private static int MAX_DECAY_TIME = 15;
+    private static double UPDATE_2_DECAY_RATIO = 5;
+    private static double DECAY_STEP_LENGTH;    // gets set to ~0.12 if MAX_DECAY_TIME is 30
+    private static double UPDATE_STEP_LENGTH;   // gets set to ~0.48 if MAX_DECAY_TIME is 30, and RATIO is 
+                                                // results in 0.28 step in each dim
     
                                                 // -P-A-D  +P-A-D
                                                 //  |  +A   |   +A
@@ -49,7 +51,7 @@ public class Mood implements Serializable {
         // we want a mood to completely decay back to default mood in at most 10 cycles
         // --> one step should be d_max / 10 = 0.35
         DECAY_STEP_LENGTH = Math.sqrt(12) / maxDecayTime;
-        UPDATE_STEP_LENGTH = DECAY_STEP_LENGTH * 5;
+        UPDATE_STEP_LENGTH = DECAY_STEP_LENGTH * UPDATE_2_DECAY_RATIO;
     }
     
     
@@ -146,7 +148,7 @@ public class Mood implements Serializable {
     
     @Override
     public String toString() {
-        return String.format("(%.4f, %.4f, %.4f)", PAD.getX(), PAD.getY(), PAD.getZ()) + this.getName();
+        return String.format("(%.4f, %.4f, %.4f) ", PAD.getX(), PAD.getY(), PAD.getZ()) + this.getName();
     }
     
     /**
