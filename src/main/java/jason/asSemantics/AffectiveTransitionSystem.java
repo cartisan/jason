@@ -1,6 +1,7 @@
 package jason.asSemantics;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -15,6 +16,7 @@ import jason.runtime.Settings;
 
 public class AffectiveTransitionSystem extends TransitionSystem {
     private String originalStepDeliberate = "";
+    private LinkedList<String> deliberative_appraisal = new LinkedList<>();
 
     AffectiveTransitionSystem(Agent a, Circumstance c, Settings s, AgArch ar) {
         super(a, c, s, ar);
@@ -88,8 +90,6 @@ public class AffectiveTransitionSystem extends TransitionSystem {
                     
                     // Add belief about experiencing this emotion to agents BB
                     this.getAg().addBel(ASSyntax.parseLiteral(emotionTerm.toString()));
-                    // TODO: test if this works!
-                    
                 } catch (ParseException e) {
                     throw new JasonException(e.getMessage());
                 }
@@ -130,9 +130,19 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         this.stepDeliberate = "DeriveSEM";
     }
     
-    protected void applyDeriveSEM() {
-        // TODO: Implement SEM derivation
-        // takes into account C.RP
+    protected void applyDeriveSEM() throws JasonException {
+        // perform more appraisal that e.g. takes into account C.RP?
+        
+        synchronized(deliberative_appraisal) {
+            for(String emotionString : this.deliberative_appraisal) {
+                Emotion emotion = Emotion.getEmotion(emotionString);
+                this.getAffectiveC().SEM.add(emotion); 
+                
+                // Add belief about experiencing this emotion to agents BB
+                this.getAg().addBel(emotion.toLiteral());
+            }
+            this.deliberative_appraisal.clear();
+        }
         
         // if there are PEM or SEM, update mood, otherwise stepDeliberate = originalStepDeliberate 
         if(getAffectiveC().getAllEmotions().size() > 0)
@@ -164,6 +174,13 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             // can't carry on, no applicable plan.
             stepDeliberate = "ProcAct";
         }
+    }
+    
+    public void scheduleForAppraisal(String emotion) throws JasonException {
+        if (!Emotion.getAllEmotions().contains(emotion)) {
+            throw new JasonException(emotion + " is not a valid OCC emotion, check the catalogue in jason.asSemantics.Emotion");
+        }
+        this.deliberative_appraisal.add(emotion);
     }
     
     public AffectiveCircumstance getAffectiveC() {
