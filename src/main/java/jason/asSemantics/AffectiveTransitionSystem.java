@@ -81,6 +81,9 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             for(Term emotionTerm: emotions) {
                 try {
                     String emotion = ASSyntax.parseLiteral(emotionTerm.toString()).getTerm(0).toString(); //gets X from ´emotion(X)´
+                    if (!Emotion.getAllEmotions().contains(emotion)) {
+                        throw new JasonException(emotion + " is not a valid OCC emotion, check the catalogue in jason.asSemantics.Emotion");
+                    }
                     this.getAffectiveC().PEM.add(Emotion.getEmotion(emotion));
                 } catch (ParseException e) {
                     throw new JasonException(e.getMessage());

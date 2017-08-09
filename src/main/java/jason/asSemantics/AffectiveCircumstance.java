@@ -103,7 +103,8 @@ public class AffectiveCircumstance extends Circumstance {
         
         this.PEM = new LinkedList<Emotion>();
         this.SEM = new LinkedList<Emotion>();
-        this.M = null;
+        if(this.ts != null)
+            this.createMood((AffectiveAgent) this.ts.getAg());
     }
 
     

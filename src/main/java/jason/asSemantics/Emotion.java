@@ -2,6 +2,7 @@ package jason.asSemantics;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import javafx.geometry.Point3D;
@@ -20,11 +21,11 @@ public class Emotion {
     
     static {
         // TODO: Complete list of emotions
-        EMOTIONS.put("ANGER",           () -> new Emotion(-0.51, 0.59, 0.25, "anger"));
-        EMOTIONS.put("DISAPPOINTMENT",  () -> new Emotion(-0.3, 0.1, -0.4, "disapointment"));
-        EMOTIONS.put("GRATITUDE",       () -> new Emotion(0.4, 0.2, -0.3, "gratitude"));
-        EMOTIONS.put("SATISFACTION",    () -> new Emotion(0.3, -0.2, 0.4, "satisfaction"));
-        EMOTIONS.put("JOY",             () -> new Emotion(0.4, 0.2, 0.1, "joy"));
+        EMOTIONS.put("anger",           () -> new Emotion(-0.51, 0.59, 0.25, "anger"));
+        EMOTIONS.put("disappointment",  () -> new Emotion(-0.3, 0.1, -0.4, "disapointment"));
+        EMOTIONS.put("gratitude",       () -> new Emotion(0.4, 0.2, -0.3, "gratitude"));
+        EMOTIONS.put("satisfaction",    () -> new Emotion(0.3, -0.2, 0.4, "satisfaction"));
+        EMOTIONS.put("joy",             () -> new Emotion(0.4, 0.2, 0.1, "joy"));
     }
 
     public final Point3D PAD;
@@ -41,9 +42,13 @@ public class Emotion {
         
         return new Point3D(averageP, averageA, averageD);
     }
+    
+    public static Set<String> getAllEmotions() {
+        return EMOTIONS.keySet();
+    }
 
     public static Emotion getEmotion(String emotion) {
-        return EMOTIONS.get(emotion.toUpperCase()).get();
+        return EMOTIONS.get(emotion).get();
     }
     
     public Emotion(double p, double a, double d, String name) {
