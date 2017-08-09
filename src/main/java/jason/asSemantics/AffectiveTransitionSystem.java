@@ -61,7 +61,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         this.stepSense = "AffectDecay";
     }
     
-    protected void applyAffectDecay() {
+    protected void applyAffectDecay() throws JasonException {
         this.stepSense = "DerivePEM";
         
         this.getAffectiveC().getM().stepDecay(this.getAffectiveAg().getDefaultMood());
@@ -85,9 +85,14 @@ public class AffectiveTransitionSystem extends TransitionSystem {
                         throw new JasonException(emotion + " is not a valid OCC emotion, check the catalogue in jason.asSemantics.Emotion");
                     }
                     this.getAffectiveC().PEM.add(Emotion.getEmotion(emotion));
+                    
+                    // Add belief about experiencing this emotion to agents BB
+                    this.getAg().addBel(ASSyntax.parseLiteral(emotionTerm.toString()));
+                    // TODO: test if this works!
+                    
                 } catch (ParseException e) {
                     throw new JasonException(e.getMessage());
-                }  
+                }
             }
         }
     }

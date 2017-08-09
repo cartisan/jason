@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import jason.asSyntax.ASSyntax;
+import jason.asSyntax.Literal;
+import jason.asSyntax.parser.ParseException;
 import javafx.geometry.Point3D;
 
 /**
@@ -26,6 +29,7 @@ public class Emotion {
         EMOTIONS.put("gratitude",       () -> new Emotion(0.4, 0.2, -0.3, "gratitude"));
         EMOTIONS.put("satisfaction",    () -> new Emotion(0.3, -0.2, 0.4, "satisfaction"));
         EMOTIONS.put("joy",             () -> new Emotion(0.4, 0.2, 0.1, "joy"));
+        EMOTIONS.put("pride",           () -> new Emotion(0.4, 0.3, 0.3, "pride"));
     }
 
     public final Point3D PAD;
@@ -86,5 +90,14 @@ public class Emotion {
     
     public String getName() {
         return this.name;
+    }
+    
+    public Literal toLiteral() {
+        try {
+            return ASSyntax.parseLiteral(String.format("emotion(%s)", this.name));
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

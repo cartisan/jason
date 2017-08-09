@@ -8,6 +8,8 @@ import java.util.stream.Stream;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import jason.RevisionFailedException;
+
 public class AffectiveCircumstance extends Circumstance {
 
     private static final long serialVersionUID = 1L;
@@ -73,16 +75,21 @@ public class AffectiveCircumstance extends Circumstance {
         return M;
     }
     
-    public void stepDecayEmotions() {
+    public void stepDecayEmotions() throws RevisionFailedException {
         this.PEM = stepDecayEmotions(this.getPEM());
         this.SEM = stepDecayEmotions(this.getSEM());
     }
     
-    private List<Emotion> stepDecayEmotions(List<Emotion> ems) {
+    private List<Emotion> stepDecayEmotions(List<Emotion> ems) throws RevisionFailedException {
         LinkedList<Emotion> newEms = new LinkedList<>();
         for (Emotion em: ems){
             em.stepDecay();
-            if(em.intensity > 0) newEms.add(em);
+            if(em.intensity > 0) 
+                newEms.add(em);
+            else {
+                // remove belief that agent is experiencing the emotion from BB
+                this.ts.getAg().delBel(em.toLiteral());
+            }
         }
         return newEms;
     }
