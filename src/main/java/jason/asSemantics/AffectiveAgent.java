@@ -2,6 +2,7 @@ package jason.asSemantics;
 
 import java.util.HashMap;
 
+import jason.JasonException;
 import jason.architecture.AgArch;
 import jason.asSemantics.AffectiveTransitionSystem;
 
@@ -26,6 +27,13 @@ public class AffectiveAgent extends Agent {
     public void initAg() {
         ts = new AffectiveTransitionSystem(this.ts);  // the TransitionSystem sets this.ts to itself in its own init
         super.initAg();
+        
+        try {
+            this.getAffectTS().updateMoodBelief();
+        } catch (JasonException e) {
+        	logger.severe("Failed to initialized mood-belief for agent: " + this.getTS().getUserAgArch().getAgName());
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -87,10 +95,12 @@ public class AffectiveAgent extends Agent {
      * phase.
      * 
      * @param personality A personality instance that will be used by the agent's reasoning cycle
+     * @throws JasonException 
      */
-    public void initializePersonality(Personality personality) {
+    public void initializePersonality(Personality personality) throws JasonException {
         this.personality = personality;
         ((AffectiveCircumstance) this.ts.getC()).setMood(this.personality.defaultMood());
+        this.getAffectTS().updateMoodBelief();
     }
 
     public Mood getDefaultMood() {

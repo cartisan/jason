@@ -93,11 +93,6 @@ public class Emotion {
     }
     
     public Literal toLiteral() {
-        try {
-            return ASSyntax.parseLiteral(String.format("emotion(%s)", this.name));
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return ASSyntax.createLiteral("emotion", ASSyntax.createAtom(this.name));
     }
 }

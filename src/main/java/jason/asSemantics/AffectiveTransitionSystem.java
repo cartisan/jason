@@ -10,6 +10,7 @@ import jason.architecture.AgArch;
 import jason.asSyntax.ASSyntax;
 import jason.asSyntax.ListTerm;
 import jason.asSyntax.Literal;
+import jason.asSyntax.PredicateIndicator;
 import jason.asSyntax.Term;
 import jason.asSyntax.parser.ParseException;
 import jason.runtime.Settings;
@@ -66,7 +67,14 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     protected void applyAffectDecay() throws JasonException {
         this.stepSense = "DerivePEM";
         
+        String oldMood = this.getAffectiveC().getM().getType();
         this.getAffectiveC().getM().stepDecay(this.getAffectiveAg().getDefaultMood());
+        String newMood = this.getAffectiveC().getM().getType();
+        
+        if(oldMood != newMood){
+            updateMoodBelief(oldMood, newMood);
+        }
+        
         this.getAffectiveC().stepDecayEmotions();
     }
     
@@ -89,7 +97,8 @@ public class AffectiveTransitionSystem extends TransitionSystem {
                     this.getAffectiveC().PEM.add(Emotion.getEmotion(emotion));
                     
                     // Add belief about experiencing this emotion to agents BB
-                    this.getAg().addBel(ASSyntax.parseLiteral(emotionTerm.toString()));
+                    this.getAg().addBel(ASSyntax.createLiteral("emotion",
+                                                               ASSyntax.createAtom(emotion)));
                 } catch (ParseException e) {
                     throw new JasonException(e.getMessage());
                 }
@@ -151,11 +160,39 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             this.stepDeliberate = this.originalStepDeliberate;
     }
     
-    protected void applyUpMood() {
+    protected void applyUpMood() throws JasonException {
         this.stepDeliberate = this.originalStepDeliberate;
 
         List<Emotion> emotions = this.getAffectiveC().getAllEmotions();
+        
+        String oldMood = this.getAffectiveC().getM().getType();
         this.getAffectiveC().getM().updateMood(emotions);
+        String newMood = this.getAffectiveC().getM().getType();
+        
+        if(oldMood != newMood){
+            updateMoodBelief(oldMood, newMood);
+        }
+    }
+
+    protected void updateMoodBelief(String oldMood, String newMood) throws JasonException {
+        this.getAg().delBel(ASSyntax.createLiteral("mood",
+                                                   ASSyntax.createAtom(oldMood)));
+        
+        this.getAg().addBel(ASSyntax.createLiteral("mood",
+                                                   ASSyntax.createAtom(newMood)));
+    }
+    
+    public void updateMoodBelief() throws JasonException {
+        Iterator<Literal> it = this.getAg().getBB().getCandidateBeliefs(new PredicateIndicator("mood", 1));
+        if(it != null) {            // for some reason "getCandidateBeliefs" returns null instead of empty iterators -.- 
+            while (it.hasNext()){
+                Literal moodLit = it.next();
+                this.getAg().delBel(moodLit);
+            }
+        }
+        
+        this.getAg().addBel(ASSyntax.createLiteral("mood", 
+                                                   ASSyntax.createAtom(this.getAffectiveC().getM().getType())));
     }
     
     @Override

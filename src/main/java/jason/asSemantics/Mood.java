@@ -160,19 +160,24 @@ public class Mood implements Serializable {
      * @return The name of the mood
      */
     public String getName() {
+        return getStrength() + " " + this.getType();
+    }
+    
+    public String getType(){
         Function<Double,Integer> pos = d -> (d >= 0 ? 1 : 0);  // returns 1 if d is positive, else 0
         int index = 4 * pos.apply(getP()) + 2 * pos.apply(getA()) + 1* pos.apply(getD());
-        String type = MOOD_NAMES[index];
-        
+        return MOOD_NAMES[index];
+    }
+
+    public String getStrength() {
         double max_dist = Math.sqrt(3); String strength;
+        
         if(this.PAD.magnitude() >= max_dist / 3 * 2)  
             strength = "fully";
         else if(this.PAD.magnitude() >= max_dist / 3) 
             strength = "moderately";
         else 
             strength = "slightly";
-        
-        return strength + " " + type;
+        return strength;
     }
-
 }
