@@ -18,6 +18,12 @@ import jason.runtime.Settings;
 
 public class AffectiveTransitionSystem extends TransitionSystem {
     private String originalStepDeliberate = "";
+    
+    /**
+     * Contains emotion names of emotions appraised during ASL reasoning.
+     * Gets populated by {@link jason.stdlib.appraise_emotion}.
+     * @see jason.asSemantics.Emotion
+     */
     private LinkedList<String> deliberative_appraisal = new LinkedList<>();
 
     AffectiveTransitionSystem(Agent a, Circumstance c, Settings s, AgArch ar) {
@@ -95,11 +101,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
                     if (!Emotion.getAllEmotions().contains(emotion)) {
                         throw new JasonException(emotion + " is not a valid OCC emotion, check the catalogue in jason.asSemantics.Emotion");
                     }
-                    this.getAffectiveC().PEM.add(Emotion.getEmotion(emotion));
-                    
-                    // Add belief about experiencing this emotion to agents BB
-                    this.getAg().addBel(ASSyntax.createLiteral("emotion",
-                                                               ASSyntax.createAtom(emotion)));
+                    this.getAffectiveAg().addEmotion(Emotion.getEmotion(emotion), "PEM");
                 } catch (ParseException e) {
                     throw new JasonException(e.getMessage());
                 }
@@ -127,7 +129,6 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         if (this.C.hasEvent()) {
             // first deal with mood events, so we don't end up deliberating based on wrong mood-belief
             for(Event ev : this.C.getEvents()) {
-                Trigger test = ev.getTrigger();
                 if (ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("mood")) {
                     this.C.getEvents().remove(ev);
                     this.C.SE = ev;
@@ -179,10 +180,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         synchronized(deliberative_appraisal) {
             for(String emotionString : this.deliberative_appraisal) {
                 Emotion emotion = Emotion.getEmotion(emotionString);
-                this.getAffectiveC().SEM.add(emotion); 
-                
-                // Add belief about experiencing this emotion to agents BB
-                this.getAg().addBel(emotion.toLiteral());
+                this.getAffectiveAg().addEmotion(emotion, "SEM");
             }
             this.deliberative_appraisal.clear();
         }

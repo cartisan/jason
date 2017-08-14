@@ -4,7 +4,6 @@ import java.util.HashMap;
 
 import jason.JasonException;
 import jason.architecture.AgArch;
-import jason.asSemantics.AffectiveTransitionSystem;
 
 /**
  *  A subclass of jason.asSemantics.Agent that employs personality aware affective reasoning according to O3A.
@@ -31,7 +30,7 @@ public class AffectiveAgent extends Agent {
         try {
             this.getAffectTS().updateMoodBelief();
         } catch (JasonException e) {
-        	logger.severe("Failed to initialized mood-belief for agent: " + this.getTS().getUserAgArch().getAgName());
+            logger.severe("Failed to initialized mood-belief for agent: " + this.getTS().getUserAgArch().getAgName());
             e.printStackTrace();
         }
     }
@@ -105,5 +104,16 @@ public class AffectiveAgent extends Agent {
 
     public Mood getDefaultMood() {
         return this.personality.defaultMood();
+    }
+
+    public void addEmotion(Emotion emotion, String type) throws JasonException {
+        switch(type) {
+            case "SEM": this.getAffectTS().getAffectiveC().SEM.add(emotion); break;
+            case "PEM": this.getAffectTS().getAffectiveC().PEM.add(emotion); break;
+            default: throw new JasonException("Emotions can be either of type 'SEM' or 'PEM'. Type used was: " + type); 
+        }
+        
+        // Add belief about experiencing this emotion to agents BB
+        this.addBel(emotion.toLiteral());
     }
 }
