@@ -12,6 +12,7 @@ import jason.asSyntax.ListTerm;
 import jason.asSyntax.Literal;
 import jason.asSyntax.PredicateIndicator;
 import jason.asSyntax.Term;
+import jason.asSyntax.Trigger;
 import jason.asSyntax.parser.ParseException;
 import jason.runtime.Settings;
 
@@ -109,12 +110,45 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     /* ------ Deliberate States ------------ */
     @Override
     protected void applySelEv() throws JasonException {
-        super.applySelEv();
-        if (stepDeliberate == "ProcAct") {
-            this.originalStepDeliberate = "ProcAct";
-            this.stepDeliberate = "DeriveSEM";
+        // Rule for atomic, if there is an atomic intention, do not select event
+        if (C.hasAtomicIntention()) {
+            this.originalStepDeliberate = "ProcAct"; // need to go to ProcAct to see if an atomic intention received a feedback action
+            this.stepDeliberate = "DeriveSEM";       // but first derive secondary emotions
+            return;            
+        }
+
+        // Rule for atomic, events from atomic intention have priority
+        this.C.SE = C.removeAtomicEvent();
+        if (this.C.SE != null) {
+            this.stepDeliberate = "RelPl";
             return;
         }
+
+        if (this.C.hasEvent()) {
+            // first deal with mood events, so we don't end up deliberating based on wrong mood-belief
+            for(Event ev : this.C.getEvents()) {
+                Trigger test = ev.getTrigger();
+                if (ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("mood")) {
+                    this.C.getEvents().remove(ev);
+                    this.C.SE = ev;
+                    this.stepDeliberate = "RelPl";
+                    return;
+                }
+            }           
+            
+            // Rule SelEv1 -- like original TransitionSystem.applySelEv
+            this.C.SE = this.getAg().selectEvent(this.C.getEvents());
+            if (getLogger().isLoggable(Level.FINE)) 
+                getLogger().fine("Selected event "+this.C.SE);
+            if (this.C.SE != null) {
+                this.stepDeliberate = "RelPl";
+                return;
+            }
+        }
+        // Rule SelEv2
+        // directly to deriveSEM and then to ProcAct if no event to handle
+        this.stepDeliberate = "DeriveSEM";
+        this.originalStepDeliberate = "ProcAct";
     }
     
     @Override
