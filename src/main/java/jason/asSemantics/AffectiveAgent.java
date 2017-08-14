@@ -1,9 +1,15 @@
 package jason.asSemantics;
 
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 import jason.JasonException;
+import jason.RevisionFailedException;
 import jason.architecture.AgArch;
+import jason.asSyntax.ASSyntax;
+import jason.asSyntax.Literal;
+import jason.asSyntax.PredicateIndicator;
 
 /**
  *  A subclass of jason.asSemantics.Agent that employs personality aware affective reasoning according to O3A.
@@ -28,7 +34,7 @@ public class AffectiveAgent extends Agent {
         super.initAg();
         
         try {
-            this.getAffectTS().updateMoodBelief();
+            this.updateMood();
         } catch (JasonException e) {
             logger.severe("Failed to initialized mood-belief for agent: " + this.getTS().getUserAgArch().getAgName());
             e.printStackTrace();
@@ -99,7 +105,7 @@ public class AffectiveAgent extends Agent {
     public void initializePersonality(Personality personality) throws JasonException {
         this.personality = personality;
         ((AffectiveCircumstance) this.ts.getC()).setMood(this.personality.defaultMood());
-        this.getAffectTS().updateMoodBelief();
+        this.updateMood();
     }
 
     public Mood getDefaultMood() {
@@ -115,5 +121,42 @@ public class AffectiveAgent extends Agent {
         
         // Add belief about experiencing this emotion to agents BB
         this.addBel(emotion.toLiteral());
+    }
+
+    public void removeEmotion(Emotion em) throws RevisionFailedException {
+        this.delBel(em.toLiteral());
+    }
+    
+    public void updateMood(Mood oldMood, Mood newMood) throws JasonException {
+        this.delBel(ASSyntax.createLiteral("mood",
+                                                   ASSyntax.createAtom(oldMood.getType())));
+        
+        this.addBel(ASSyntax.createLiteral("mood",
+                                                   ASSyntax.createAtom(newMood.getType())));
+    }
+    
+    private void updateMood() throws JasonException {
+        Iterator<Literal> it = this.getBB().getCandidateBeliefs(new PredicateIndicator("mood", 1));
+        if(it != null) {            // for some reason "getCandidateBeliefs" returns null instead of empty iterators -.- 
+            while (it.hasNext()){
+                Literal moodLit = it.next();
+                this.delBel(moodLit);
+            }
+        }
+        
+        this.addBel(ASSyntax.createLiteral("mood", 
+                                            ASSyntax.createAtom(this.getMood().getType())));
+    }
+
+    private AffectiveTransitionSystem getAffectiveTS() {
+        return (AffectiveTransitionSystem) this.getTS();
+    }
+    
+    public Mood getMood() {
+        return this.getAffectiveTS().getAffectiveC().getM();
+    }
+    
+    public List<Emotion> getEmotions() {
+        return this.getAffectiveTS().getAffectiveC().getAllEmotions();
     }
 }

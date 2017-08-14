@@ -10,9 +10,7 @@ import jason.architecture.AgArch;
 import jason.asSyntax.ASSyntax;
 import jason.asSyntax.ListTerm;
 import jason.asSyntax.Literal;
-import jason.asSyntax.PredicateIndicator;
 import jason.asSyntax.Term;
-import jason.asSyntax.Trigger;
 import jason.asSyntax.parser.ParseException;
 import jason.runtime.Settings;
 
@@ -46,7 +44,6 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     protected void applySemanticRuleSense() throws JasonException {
         getLogger().fine(this.toString() + " sense step: " + stepSense);
         switch (stepSense) {
-            case "AffectDecay": applyAffectDecay(); break;
             case "DerivePEM": applyDerivePEM(); break;
         default:
             super.applySemanticRuleSense();
@@ -68,26 +65,16 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     @Override
     protected void applyProcMsg() throws JasonException {
         super.applyProcMsg();
-        this.stepSense = "AffectDecay";
-    }
-    
-    protected void applyAffectDecay() throws JasonException {
         this.stepSense = "DerivePEM";
-        
-        String oldMood = this.getAffectiveC().getM().getType();
-        this.getAffectiveC().getM().stepDecay(this.getAffectiveAg().getDefaultMood());
-        String newMood = this.getAffectiveC().getM().getType();
-        
-        if(oldMood != newMood){
-            updateMoodBelief(oldMood, newMood);
-        }
-        
-        this.getAffectiveC().stepDecayEmotions();
     }
     
     protected void applyDerivePEM() throws JasonException {
         this.stepSense = "SelEv";
         
+        // apply one step of decay to old pem
+        this.getAffectiveC().stepDecayPEM();
+        
+        // appraise new pem
         Iterator<Literal> perceptsIt = this.getAg().getBB().getPercepts();
         
         while (perceptsIt.hasNext()) {
@@ -175,8 +162,14 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     }
     
     protected void applyDeriveSEM() throws JasonException {
-        // perform more appraisal that e.g. takes into account C.RP?
+        this.stepDeliberate = "UpMood";
+
+        // apply one decay step on old sem
+        this.getAffectiveC().stepDecaySEM();
         
+
+        // derive new sem
+        // TODO: perform more appraisal that e.g. takes into account C.RP?
         synchronized(deliberative_appraisal) {
             for(String emotionString : this.deliberative_appraisal) {
                 Emotion emotion = Emotion.getEmotion(emotionString);
@@ -184,49 +177,26 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             }
             this.deliberative_appraisal.clear();
         }
-        
-        // if there are PEM or SEM, update mood, otherwise stepDeliberate = originalStepDeliberate 
-        if(getAffectiveC().getAllEmotions().size() > 0)
-            this.stepDeliberate = "UpMood";
-        else 
-            this.stepDeliberate = this.originalStepDeliberate;
     }
     
     protected void applyUpMood() throws JasonException {
         this.stepDeliberate = this.originalStepDeliberate;
+        Mood oldMood = this.getAffectiveC().getM().clone();
+        
+        // perform one step of decay on old mood
+        this.getAffectiveC().getM().stepDecay(this.getAffectiveAg().getDefaultMood());
 
+        // perform one step of mood update
         List<Emotion> emotions = this.getAffectiveC().getAllEmotions();
-        
-        String oldMood = this.getAffectiveC().getM().getType();
         this.getAffectiveC().getM().updateMood(emotions);
-        String newMood = this.getAffectiveC().getM().getType();
-        
-        if(oldMood != newMood){
-            updateMoodBelief(oldMood, newMood);
+
+        // if mood changed octants, update agent belief
+        Mood newMood = this.getAffectiveC().getM();
+        if(oldMood.getType() != newMood.getType()){
+            this.getAffectiveAg().updateMood(oldMood, newMood);
         }
     }
 
-    protected void updateMoodBelief(String oldMood, String newMood) throws JasonException {
-        this.getAg().delBel(ASSyntax.createLiteral("mood",
-                                                   ASSyntax.createAtom(oldMood)));
-        
-        this.getAg().addBel(ASSyntax.createLiteral("mood",
-                                                   ASSyntax.createAtom(newMood)));
-    }
-    
-    public void updateMoodBelief() throws JasonException {
-        Iterator<Literal> it = this.getAg().getBB().getCandidateBeliefs(new PredicateIndicator("mood", 1));
-        if(it != null) {            // for some reason "getCandidateBeliefs" returns null instead of empty iterators -.- 
-            while (it.hasNext()){
-                Literal moodLit = it.next();
-                this.getAg().delBel(moodLit);
-            }
-        }
-        
-        this.getAg().addBel(ASSyntax.createLiteral("mood", 
-                                                   ASSyntax.createAtom(this.getAffectiveC().getM().getType())));
-    }
-    
     @Override
     protected void applySelAppl() throws JasonException {
         // TODO: Implement changes

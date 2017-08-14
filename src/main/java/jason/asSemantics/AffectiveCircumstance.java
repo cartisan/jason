@@ -75,8 +75,11 @@ public class AffectiveCircumstance extends Circumstance {
         return M;
     }
     
-    public void stepDecayEmotions() throws RevisionFailedException {
+    public void stepDecayPEM() throws RevisionFailedException {
         this.PEM = stepDecayEmotions(this.getPEM());
+    }
+
+    public void stepDecaySEM() throws RevisionFailedException {
         this.SEM = stepDecayEmotions(this.getSEM());
     }
     
@@ -88,10 +91,15 @@ public class AffectiveCircumstance extends Circumstance {
                 newEms.add(em);
             else {
                 // remove belief that agent is experiencing the emotion from BB
-                this.ts.getAg().delBel(em.toLiteral());
+                this.getAffectiveAg().removeEmotion(em);
             }
         }
         return newEms;
+    }
+
+    private AffectiveAgent getAffectiveAg() {
+        return ((AffectiveTransitionSystem) this.ts).getAffectiveAg();
+        
     }
 
     private void createMood(AffectiveAgent ag) {
@@ -111,7 +119,7 @@ public class AffectiveCircumstance extends Circumstance {
         this.PEM = new LinkedList<Emotion>();
         this.SEM = new LinkedList<Emotion>();
         if(this.ts != null)
-            this.createMood((AffectiveAgent) this.ts.getAg());
+            this.createMood(this.getAffectiveAg());
     }
 
     

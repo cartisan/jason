@@ -25,11 +25,13 @@ public class Mood implements Serializable {
     // defines how many decay steps are needed at most for a mood to return to default mood
     // mood updates are performed UPDATE_2_DECAY_RATIO times as fast as the decay, so this also influences 
     // UPDATE_STEP_LENGTH
-    private static int MAX_DECAY_TIME = 15;
-    private static double UPDATE_2_DECAY_RATIO = 5;
+    private static int MAX_DECAY_TIME = 50;     // was 30
     private static double DECAY_STEP_LENGTH;    // gets set to ~0.12 if MAX_DECAY_TIME is 30
-    private static double UPDATE_STEP_LENGTH;   // gets set to ~0.48 if MAX_DECAY_TIME is 30, and RATIO is 
-                                                // results in 0.28 step in each dim
+    
+    //private static double UPDATE_2_DECAY_RATIO = 5;
+    private static double MAX_UPDATE_TIME = 3;
+    private static double UPDATE_STEP_LENGTH;   // gets set to ~0.7
+                                                // results in 0.4 step in each dim
     
                                                 // -P-A-D  +P-A-D
                                                 //  |  +A   |   +A
@@ -41,27 +43,28 @@ public class Mood implements Serializable {
     
     static {
         // executed at class loading time to initialize DECAY_STEP_LENGTH and UPDATE_STEP_LENGTH 
-        setMaxDecayTime(MAX_DECAY_TIME);
+        setStepLengths();
     }
 
-    public static void setMaxDecayTime(int maxDecayTime) {
-        MAX_DECAY_TIME = maxDecayTime;
-
+    public static void setStepLengths() {
         // maximal dist. in PDA space: (1,1,1) to (-1,-1,-1) --> d_max = sqrt(2²+2²+2²) = 3.46
         // we want a mood to completely decay back to default mood in at most 10 cycles
         // --> one step should be d_max / 10 = 0.35
-        DECAY_STEP_LENGTH = Math.sqrt(12) / maxDecayTime;
-        UPDATE_STEP_LENGTH = DECAY_STEP_LENGTH * UPDATE_2_DECAY_RATIO;
+        DECAY_STEP_LENGTH = Math.sqrt(12) / MAX_DECAY_TIME;
+              
+        UPDATE_STEP_LENGTH = Math.sqrt(12) /  MAX_UPDATE_TIME;
+    }
+    
+    public static void setMaxDecayTime(int decayTime){
+        MAX_DECAY_TIME = decayTime;
+        setStepLengths();
     }
     
     
-    private Logger logger = null;
-    
+    protected Logger logger = Logger.getLogger(Mood.class.getName());
     public Point3D PAD = null;
 
     public Mood(double p, double a, double d) {
-        logger = Logger.getLogger(Mood.class.getName());
-        
         if(p>1 | a>1 | d>1 | p<-1 | a<-1 | d<-1) {
             logger.warning("One of the Mood parameters exceeds the bounds (-1.0 < x < 1.0).");
             throw new IllegalArgumentException("One of the Mood parameters exceeds the bounds (-1.0 < x < 1.0).");
@@ -75,6 +78,10 @@ public class Mood implements Serializable {
     }
 
     public void updateMood(List<Emotion> emotions) {
+        if (emotions.isEmpty()) {
+            return;
+        }
+        
         List<Double> step = new LinkedList<Double>();
         double oneDimStep = Math.sqrt(Math.pow(UPDATE_STEP_LENGTH, 2)/3);   // root(3*dim_step²) = UPDATE_STEP_LENGTH  
         
@@ -147,8 +154,13 @@ public class Mood implements Serializable {
     }
     
     @Override
+    public Mood clone() {
+        return new Mood(this.getP(), this.getA(), this.getD());
+    }
+    
+    @Override
     public String toString() {
-        return String.format("(%.4f, %.4f, %.4f) ", PAD.getX(), PAD.getY(), PAD.getZ()) + this.getName();
+        return String.format("(%.4f, %.4f, %.4f) ", PAD.getX(), PAD.getY(), PAD.getZ()) + this.getFullName();
     }
     
     /**
@@ -159,7 +171,7 @@ public class Mood implements Serializable {
      * the borders being determined by splitting the maximal distance into thirds.   
      * @return The name of the mood
      */
-    public String getName() {
+    public String getFullName() {
         return getStrength() + " " + this.getType();
     }
     
