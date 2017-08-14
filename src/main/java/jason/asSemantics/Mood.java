@@ -29,7 +29,7 @@ public class Mood implements Serializable {
     private static double DECAY_STEP_LENGTH;    // gets set to ~0.12 if MAX_DECAY_TIME is 30
     
     //private static double UPDATE_2_DECAY_RATIO = 5;
-    private static double MAX_UPDATE_TIME = 3;
+    private static double MAX_UPDATE_TIME = 5;
     private static double UPDATE_STEP_LENGTH;   // gets set to ~0.7
                                                 // results in 0.4 step in each dim
     
