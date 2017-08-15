@@ -1,6 +1,14 @@
 package jason.asSemantics;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.logging.Logger;
+
+import jason.asSyntax.Literal;
 
 /*
  * Stores an Affective Agent's personality using the Big Five Personality traits:
@@ -12,8 +20,18 @@ import java.io.Serializable;
  * 
  */
 public class Personality implements Serializable {
-
     private static final long serialVersionUID = 1L;
+    static Logger logger = Logger.getLogger(Personality.class.getName());
+    
+    static final String ANNOTATION_FUNCTOR = "personality";
+    public static final List<String> TRAITS = 
+            Arrays.asList("openness", "conscientiousness", "extraversion", "agreeableness", "neuroticism");
+    @SuppressWarnings("serial")
+    public static final Map<String, Function<Double, Boolean>> TRAIT_CHECKS= new HashMap<String, Function<Double, Boolean>>() {{ 
+        put("low",    val -> val <= -0.7);
+        put("medium", val -> val > -0.7 && val < 0.7);
+        put("high",   val -> val >= 0.7);
+    }};
     
     public double O;
     public double C;
@@ -31,7 +49,7 @@ public class Personality implements Serializable {
     
     /*
      * The mapping from personality traits to default mood is derived by:
-     * Gebhard, P. (2005). ALMA: a layered model of affect. In Proceedings of the fourth doubleernational jodouble
+     * Gebhard, P. (2005). ALMA: a layered model of affect. In Proceedings of the fourth International joint
      * conference on Autonomous agents and multiagent systems, pages 29–36, New York, USA. ACM.
      * 
      */
@@ -42,4 +60,33 @@ public class Personality implements Serializable {
         return new Mood(p, a, d);
     }
 
+    public boolean checkConstrait(Literal personalityLit) {
+        // check that literal complies with form: personality(trait, trait-bound)
+        if(personalityLit.getArity() != 2) {
+            logger.severe("personality annotation: " + personalityLit.toString() + " has wrong arity. Should be 2.");
+            return false;
+        }
+        
+        // check correctness of trait and bound terms
+        String trait = personalityLit.getTerm(0).toString();
+        String bound = personalityLit.getTerm(1).toString();
+        if (!TRAITS.contains(trait)) {
+            logger.severe("personality annotation: " + personalityLit.toString() + " uses an illegal trait name");
+            return false;
+        }
+        if (!TRAIT_CHECKS.containsKey(bound)) {
+            logger.severe("personality annotation: " + personalityLit.toString() + " uses an illegal trait boundary");
+            return false;
+        }
+            
+        switch(trait) {
+            case "openness":            return TRAIT_CHECKS.get(bound).apply(this.O);
+            case "conscientiousness":   return TRAIT_CHECKS.get(bound).apply(this.C);
+            case "extraversion":        return TRAIT_CHECKS.get(bound).apply(this.E);
+            case "agreeableness":       return TRAIT_CHECKS.get(bound).apply(this.A);
+            case "neuroticism":         return TRAIT_CHECKS.get(bound).apply(this.N);
+            default:                    return false;
+        }
+        
+    }
 }

@@ -10,6 +10,7 @@ import jason.architecture.AgArch;
 import jason.asSyntax.ASSyntax;
 import jason.asSyntax.Literal;
 import jason.asSyntax.PredicateIndicator;
+import jason.asSyntax.Term;
 
 /**
  *  A subclass of jason.asSemantics.Agent that employs personality aware affective reasoning according to O3A.
@@ -111,7 +112,7 @@ public class AffectiveAgent extends Agent {
     public Mood getDefaultMood() {
         return this.personality.defaultMood();
     }
-
+    
     public void addEmotion(Emotion emotion, String type) throws JasonException {
         switch(type) {
             case "SEM": this.getAffectTS().getAffectiveC().SEM.add(emotion); break;
@@ -128,11 +129,11 @@ public class AffectiveAgent extends Agent {
     }
     
     public void updateMood(Mood oldMood, Mood newMood) throws JasonException {
-        this.delBel(ASSyntax.createLiteral("mood",
-                                                   ASSyntax.createAtom(oldMood.getType())));
+        this.delBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR,
+                                           ASSyntax.createAtom(oldMood.getType())));
         
-        this.addBel(ASSyntax.createLiteral("mood",
-                                                   ASSyntax.createAtom(newMood.getType())));
+        this.addBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR,
+                                           ASSyntax.createAtom(newMood.getType())));
     }
     
     private void updateMood() throws JasonException {
@@ -144,8 +145,8 @@ public class AffectiveAgent extends Agent {
             }
         }
         
-        this.addBel(ASSyntax.createLiteral("mood", 
-                                            ASSyntax.createAtom(this.getMood().getType())));
+        this.addBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR,
+                                           ASSyntax.createAtom(this.getMood().getType())));
     }
 
     private AffectiveTransitionSystem getAffectiveTS() {

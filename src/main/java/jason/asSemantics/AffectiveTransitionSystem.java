@@ -81,7 +81,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             Literal percept = perceptsIt.next();
             
             // get all terms of form ´emotion(X)´ in annotations, or empty list if none present
-            ListTerm emotions = percept.getAnnots("emotion");
+            ListTerm emotions = percept.getAnnots(Emotion.ANNOTATION_FUNCTOR);
             for(Term emotionTerm: emotions) {
                 try {
                     String emotion = ASSyntax.parseLiteral(emotionTerm.toString()).getTerm(0).toString(); //gets X from ´emotion(X)´
@@ -161,6 +161,59 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         this.stepDeliberate = "DeriveSEM";
     }
     
+    @Override
+    protected void applyApplPl() throws JasonException {
+        super.applyApplPl();
+        
+        if(this.C.AP == null) {
+            return;
+        }
+        
+        // there are applicable plans available, check all of them for personality annotations
+        //   if annotations are present, they all have to fit this agent in order for the plan to be applicable, otherwise remove from AP
+        //   if plans with fitting personality annotations are present, consider only these specialized options for AP
+        List<Option> specialisedOptions = new LinkedList<>();
+        
+        for (Iterator<Option> it = this.C.AP.iterator(); it.hasNext(); ) {
+            Option o = it.next();
+            ListTerm persTerms = o.getPlan().getLabel().getAnnots(Personality.ANNOTATION_FUNCTOR);
+            
+            if (!persTerms.isEmpty()) {
+                // personality annotations are present in this option, form:[personality(openness, high), ...]
+                if (persTerms.stream().allMatch( term -> this.getAffectiveAg().getPersonality().checkConstrait((Literal) term)))
+                    // if all terms in annotations fit our personality, save if as a specialized option 
+                    specialisedOptions.add(o);
+                else
+                    // at least one annotation doesn't fit this personality, can't use this option
+                    this.C.AP.remove(o);
+            }
+        }
+        
+        // specialized plans that have a personality annotation fitting to this agent have been found, prefer these plans
+        if (!specialisedOptions.isEmpty()) {
+            this.C.AP = specialisedOptions;
+            return;
+        }
+        
+        //we've been removing options in AP, if no options are left, proceed as usual in such a case
+        if (this.C.AP.isEmpty())
+            this.applyRelApplPlRule2("applicable");
+        
+//      // old version that works with exceptions in .checkConstraints(...)
+//          boolean fit = true;
+//          for(Term term : persTerms) {
+//              if (!this.getAffectiveAg().getPersonality().checkConstrait((Literal) term)) {
+//                  fit = false;
+//                  break;
+//              }
+//          }
+//          
+//          if (fit)
+//              specialisedOptions.add(o);
+//          else
+//              this.C.AP.remove(o);
+    }
+    
     protected void applyDeriveSEM() throws JasonException {
         this.stepDeliberate = "UpMood";
 
@@ -199,8 +252,6 @@ public class AffectiveTransitionSystem extends TransitionSystem {
 
     @Override
     protected void applySelAppl() throws JasonException {
-        // TODO: Implement changes
-        
         // Rule SelAppl
         getC().SO = getAg().selectOption(getC().AP);
 

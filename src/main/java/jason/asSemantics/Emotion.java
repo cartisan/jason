@@ -7,7 +7,6 @@ import java.util.function.Supplier;
 
 import jason.asSyntax.ASSyntax;
 import jason.asSyntax.Literal;
-import jason.asSyntax.parser.ParseException;
 import javafx.geometry.Point3D;
 
 /**
@@ -21,6 +20,7 @@ import javafx.geometry.Point3D;
  */
 public class Emotion {
     static public HashMap<String, Supplier<Emotion>> EMOTIONS = new HashMap<>();
+    static final String ANNOTATION_FUNCTOR = "emotion";
     
     static {
         // TODO: Complete list of emotions
@@ -93,6 +93,6 @@ public class Emotion {
     }
     
     public Literal toLiteral() {
-        return ASSyntax.createLiteral("emotion", ASSyntax.createAtom(this.name));
+        return ASSyntax.createLiteral(ANNOTATION_FUNCTOR, ASSyntax.createAtom(this.name));
     }
 }
