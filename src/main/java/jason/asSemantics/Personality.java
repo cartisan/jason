@@ -71,9 +71,7 @@ public class Personality implements Serializable {
         return new Mood(p, a, d);
     }
 
-    public boolean checkConstrait(Literal personalityLit) {
-        // FIXME: lambdas in TRAIT_CHECKS are not doing what is written in them!
-        
+    public boolean checkConstraint(Literal personalityLit) {
         // check that literal complies with form: personality(trait, trait-bound)
         if(personalityLit.getArity() != 2) {
             logger.severe("personality annotation: " + personalityLit.toString() + " has wrong arity. Should be 2.");

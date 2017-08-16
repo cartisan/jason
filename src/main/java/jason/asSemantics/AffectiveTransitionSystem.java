@@ -176,17 +176,20 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         
         for (Iterator<Option> it = this.C.AP.iterator(); it.hasNext(); ) {
             Option o = it.next();
-            ListTerm persTerms = o.getPlan().getLabel().getAnnots(Personality.ANNOTATION_FUNCTOR);
             
-            if (!persTerms.isEmpty()) {
-                // personality annotations are present in this option, form:[personality(openness, high), ...]
-                if (persTerms.stream().allMatch( term -> this.getAffectiveAg().getPersonality().checkConstrait((Literal) term)))
-                    // if all terms in annotations fit our personality, save if as a specialized option 
+            Literal affect_condition = (Literal) o.getPlan().getLabel().getAnnots("affect").getTerm();
+            // affect annotations are present in this option, form:[affect(personality(openness, high), mood(...), ...)]
+            
+            if (affect_condition != null) {
+                List<Term> conditions = affect_condition.getTerms();
+                if (conditions.stream().allMatch(term -> this.getAffectiveAg().checkConstraint((Literal) term)))
+                    // if all terms in annotations fit our agent, save this option as a specialized option 
                     specialisedOptions.add(o);
                 else
                     // at least one annotation doesn't fit this personality, can't use this option
                     this.C.AP.remove(o);
             }
+            
         }
         
         // specialized plans that have a personality annotation fitting to this agent have been found, prefer these plans

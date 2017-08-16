@@ -2,11 +2,14 @@ package jason.asSemantics;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
+import jason.asSyntax.Literal;
 import javafx.geometry.Point3D;
 
 
@@ -42,9 +45,23 @@ public class Mood implements Serializable {
     private static final String[] MOOD_NAMES= {"bored", "disdainful", "anxious", "hostile",      // -P 
                                                "docile","relaxed",    "dependent", "exuberant"}; // +P
     
+    
+    public static final List<String> DIMENSIONS = Arrays.asList("pleasure", "arousal", "dominance");
+    public static final Map<String, Function<Double, Boolean>> DIMENSION_CHECKS;
+    static {
+    }
+    
+    
     static {
         // executed at class loading time to initialize DECAY_STEP_LENGTH and UPDATE_STEP_LENGTH 
         setStepLengths();
+
+        // initialize possible checks on the dimensions of a mood
+        DIMENSION_CHECKS = new HashMap<String, Function<Double, Boolean>>(); 
+        DIMENSION_CHECKS.put("positive", val -> val >= 0);
+        DIMENSION_CHECKS.put("negative", val -> val < 0);
+        DIMENSION_CHECKS.put("high",   val -> val >= 0.7);
+        DIMENSION_CHECKS.put("low",   val -> val <= -0.7);
     }
 
     public static void setStepLengths() {
@@ -192,5 +209,32 @@ public class Mood implements Serializable {
         else 
             strength = "slightly";
         return strength;
+    }
+
+    public boolean checkConstraint(Literal constraint) {
+        // check that literal complies with form: personality(trait, trait-bound)
+        if(constraint.getArity() != 2) {
+            logger.severe("personality annotation: " + constraint.toString() + " has wrong arity. Should be 2.");
+            return false;
+        }
+        
+        // check correctness of trait and bound terms
+        String dimension = constraint.getTerm(0).toString();
+        String bound = constraint.getTerm(1).toString();
+        if (!DIMENSIONS.contains(dimension)) {
+            logger.severe("mood annotation: " + constraint.toString() + " uses an illegal dimension name");
+            return false;
+        }
+        if (!DIMENSION_CHECKS.containsKey(bound)) {
+            logger.severe("personality annotation: " + constraint.toString() + " uses an illegal trait boundary");
+            return false;
+        }
+            
+        switch(dimension) {
+            case "pleasure":    return DIMENSION_CHECKS.get(bound).apply(this.getP());
+            case "arousal":     return DIMENSION_CHECKS.get(bound).apply(this.getA());
+            case "dominance":   return DIMENSION_CHECKS.get(bound).apply(this.getD());
+            default:            return false;
+        }
     }
 }

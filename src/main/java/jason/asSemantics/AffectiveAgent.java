@@ -113,6 +113,16 @@ public class AffectiveAgent extends Agent {
         return this.personality.defaultMood();
     }
     
+    public boolean checkConstraint(Literal constraint) {
+        switch(constraint.getFunctor()) {
+            case Personality.ANNOTATION_FUNCTOR:    return this.personality.checkConstraint(constraint);
+            case Mood.ANNOTATION_FUNCTOR:           return this.getMood().checkConstraint(constraint);
+            default: logger.severe("plan annotation: " +constraint.toString() + " has invalid functor."); return false;
+                
+        }
+        
+    }
+    
     public void addEmotion(Emotion emotion, String type) throws JasonException {
         switch(type) {
             case "SEM": this.getAffectTS().getAffectiveC().SEM.add(emotion); break;
