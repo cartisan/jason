@@ -26,12 +26,14 @@ public class Personality implements Serializable {
     static final String ANNOTATION_FUNCTOR = "personality";
     public static final List<String> TRAITS = 
             Arrays.asList("openness", "conscientiousness", "extraversion", "agreeableness", "neuroticism");
-    @SuppressWarnings("serial")
-    public static final Map<String, Function<Double, Boolean>> TRAIT_CHECKS= new HashMap<String, Function<Double, Boolean>>() {{ 
-        put("low",    val -> val <= -0.7);
-        put("medium", val -> val > -0.7 && val < 0.7);
-        put("high",   val -> val >= 0.7);
-    }};
+
+    public static final Map<String, Function<Double, Boolean>> TRAIT_CHECKS;
+    static {
+        TRAIT_CHECKS = new HashMap<String, Function<Double, Boolean>>(); 
+        TRAIT_CHECKS.put("low",    val -> val <= -0.7);
+        TRAIT_CHECKS.put("medium", val -> val > -0.7 && val < 0.7);
+        TRAIT_CHECKS.put("high",   val -> val >= 0.7);
+    }
     
     public double O;
     public double C;
@@ -61,6 +63,8 @@ public class Personality implements Serializable {
     }
 
     public boolean checkConstrait(Literal personalityLit) {
+        // FIXME: lambdas in TRAIT_CHECKS are not doing what is written in them!
+        
         // check that literal complies with form: personality(trait, trait-bound)
         if(personalityLit.getArity() != 2) {
             logger.severe("personality annotation: " + personalityLit.toString() + " has wrong arity. Should be 2.");
