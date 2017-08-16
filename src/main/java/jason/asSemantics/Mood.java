@@ -11,11 +11,11 @@ import javafx.geometry.Point3D;
 
 
 /**
- * Stores an Affective Agent's mood using the PAD space model with the dimensions:
- *  pleasure, arousal, dominance.
+ * <p> Stores an Affective Agent's mood using the PAD space model with the dimensions:
+ *  <i>pleasure, arousal, dominance</i>.
  * Dimensions are represented using scalar double values in the range -1.0 <= x <= 1.0
  * 
- * See: A. Mehrabian. Analysis of the Big-Five Personality Factors in Terms of the PAD
+ * <p> See: A. Mehrabian. Analysis of the Big-Five Personality Factors in Terms of the PAD
  * Temperament Model. Australian Journal of Psychology, 48(2):86–92, 1996.
  * 
  */
@@ -26,7 +26,7 @@ public class Mood implements Serializable {
     // defines how many decay steps are needed at most for a mood to return to default mood
     // mood updates are performed UPDATE_2_DECAY_RATIO times as fast as the decay, so this also influences 
     // UPDATE_STEP_LENGTH
-    private static int MAX_DECAY_TIME = 50;     // was 30
+    private static int MAX_DECAY_TIME = 60;     // was 30
     private static double DECAY_STEP_LENGTH;    // gets set to ~0.12 if MAX_DECAY_TIME is 30
     
     //private static double UPDATE_2_DECAY_RATIO = 5;

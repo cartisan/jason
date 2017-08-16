@@ -198,20 +198,6 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         //we've been removing options in AP, if no options are left, proceed as usual in such a case
         if (this.C.AP.isEmpty())
             this.applyRelApplPlRule2("applicable");
-        
-//      // old version that works with exceptions in .checkConstraints(...)
-//          boolean fit = true;
-//          for(Term term : persTerms) {
-//              if (!this.getAffectiveAg().getPersonality().checkConstrait((Literal) term)) {
-//                  fit = false;
-//                  break;
-//              }
-//          }
-//          
-//          if (fit)
-//              specialisedOptions.add(o);
-//          else
-//              this.C.AP.remove(o);
     }
     
     protected void applyDeriveSEM() throws JasonException {

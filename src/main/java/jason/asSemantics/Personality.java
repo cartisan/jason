@@ -10,12 +10,21 @@ import java.util.logging.Logger;
 
 import jason.asSyntax.Literal;
 
-/*
- * Stores an Affective Agent's personality using the Big Five Personality traits:
- *  openness, conscientiousness, extraversion, agreeableness, neuroticism.
- * Traits are represented using scalar double values in the range -1.0 <= x <= 1.0.
+/**
+ * <p> Stores an Affective Agent's personality using the Big Five Personality traits:
+ *  <i>openness, conscientiousness, extraversion, agreeableness, neuroticism</i>.
+ * Traits are represented using scalar double values in the range -1.0 <= x <= 1.0. <br>
  * 
- * See: R. R. McCrae and O. P. John. An Introduction to the Five-Factor Model and its
+ * <p>Adjectives associated with traits in questionnaires:
+ *  <ul>
+ *   <li> openness: curious, insightful </li>
+ *   <li> conscientiousness: reliable, responsible </li>
+ *   <li> extraversion: talkative, active </li>
+ *   <li> agreeableness: forgiving, generous </li>
+ *   <li> neuroticism: unstable, touchy </li>
+ *  </ul>
+ * 
+ * <p>See: R. R. McCrae and O. P. John. An Introduction to the Five-Factor Model and its
  * Applications. Journal of personality, 60(2):175–215, 1992.
  * 
  */
