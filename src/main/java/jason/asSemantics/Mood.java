@@ -29,7 +29,7 @@ public class Mood implements Serializable {
     // defines how many decay steps are needed at most for a mood to return to default mood
     // mood updates are performed UPDATE_2_DECAY_RATIO times as fast as the decay, so this also influences 
     // UPDATE_STEP_LENGTH
-    private static int MAX_DECAY_TIME = 60;     // was 30
+    private static int MAX_DECAY_TIME = 50;     // was 30
     private static double DECAY_STEP_LENGTH;    // gets set to ~0.12 if MAX_DECAY_TIME is 30
     
     //private static double UPDATE_2_DECAY_RATIO = 5;
