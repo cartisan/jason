@@ -22,7 +22,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
      * Gets populated by {@link jason.stdlib.appraise_emotion}.
      * @see jason.asSemantics.Emotion
      */
-    private LinkedList<String> deliberative_appraisal = new LinkedList<>();
+    private LinkedList<Emotion> deliberative_appraisal = new LinkedList<>();
 
     AffectiveTransitionSystem(Agent a, Circumstance c, Settings s, AgArch ar) {
         super(a, c, s, ar);
@@ -80,15 +80,21 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         while (perceptsIt.hasNext()) {
             Literal percept = perceptsIt.next();
             
-            // get all terms of form ´emotion(X)´ in annotations, or empty list if none present
+            // get all terms of form ´emotion(X)´/´emotion(X, Target)´ in annotations, or empty list if none present
             ListTerm emotions = percept.getAnnots(Emotion.ANNOTATION_FUNCTOR);
             for(Term emotionTerm: emotions) {
                 try {
-                    String emotion = ASSyntax.parseLiteral(emotionTerm.toString()).getTerm(0).toString(); //gets X from ´emotion(X)´
-                    if (!Emotion.getAllEmotions().contains(emotion)) {
-                        throw new JasonException(emotion + " is not a valid OCC emotion, check the catalogue in jason.asSemantics.Emotion");
+                    Literal emotionLit = ASSyntax.parseLiteral(emotionTerm.toString());
+                    String emotionType = emotionLit.getTerm(0).toString(); //gets X from ´emotion(X)´
+                    if (!Emotion.getAllEmotions().contains(emotionType)) {
+                        throw new JasonException(emotionType + " is not a valid OCC emotion, check the catalogue in jason.asSemantics.Emotion");
                     }
-                    this.getAffectiveAg().addEmotion(Emotion.getEmotion(emotion), "PEM");
+                    Emotion emotion = Emotion.getEmotion(emotionType);
+                    
+                    if(emotionLit.getArity() == 2)
+                        emotion.setTarget(emotionLit.getTerm(1).toString());
+                    
+                    this.getAffectiveAg().addEmotion(emotion, "PEM");
                 } catch (ParseException e) {
                     throw new JasonException(e.getMessage());
                 }
@@ -213,8 +219,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         // derive new sem
         // TODO: perform more appraisal that e.g. takes into account C.RP?
         synchronized(deliberative_appraisal) {
-            for(String emotionString : this.deliberative_appraisal) {
-                Emotion emotion = Emotion.getEmotion(emotionString);
+            for(Emotion emotion : this.deliberative_appraisal) {
                 this.getAffectiveAg().addEmotion(emotion, "SEM");
             }
             this.deliberative_appraisal.clear();
@@ -226,6 +231,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         Mood oldMood = this.getAffectiveC().getM().clone();
         
         // perform one step of decay on old mood
+        // TODO: acc. Gebhard: only when no emotions are present!
         this.getAffectiveC().getM().stepDecay(this.getAffectiveAg().getDefaultMood());
 
         // perform one step of mood update
@@ -259,7 +265,16 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         if (!Emotion.getAllEmotions().contains(emotion)) {
             throw new JasonException(emotion + " is not a valid OCC emotion, check the catalogue in jason.asSemantics.Emotion");
         }
-        this.deliberative_appraisal.add(emotion);
+        this.deliberative_appraisal.add(Emotion.getEmotion(emotion));
+    }
+    
+    public void scheduleForAppraisal(String emotion, String target) throws JasonException {
+        if (!Emotion.getAllEmotions().contains(emotion)) {
+            throw new JasonException(emotion + " is not a valid OCC emotion, check the catalogue in jason.asSemantics.Emotion");
+        }
+        Emotion em = Emotion.getEmotion(emotion);
+        em.setTarget(target);
+        this.deliberative_appraisal.add(em);
     }
     
     public AffectiveCircumstance getAffectiveC() {

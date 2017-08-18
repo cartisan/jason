@@ -36,14 +36,18 @@ public class appraise_emotion extends DefaultInternalAction {
 
     @Override
     public int getMaxArgs() { 
-        return 1; 
+        return 2;
     }
     
     @Override
     public Object execute(TransitionSystem ts, Unifier un, Term[] args) throws Exception {
         checkArguments(args);
-
-        ((AffectiveTransitionSystem) ts).scheduleForAppraisal(args[0].toString());
+        
+        if (args.length == 1) 
+            ((AffectiveTransitionSystem) ts).scheduleForAppraisal(args[0].toString());
+        else
+            ((AffectiveTransitionSystem) ts).scheduleForAppraisal(args[0].toString(), args[1].toString());
+        
         return true;
     }
     

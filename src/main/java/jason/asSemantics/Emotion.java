@@ -10,7 +10,7 @@ import jason.asSyntax.Literal;
 import javafx.geometry.Point3D;
 
 /**
- * Represents the emotions from the OCC catalog [1] and represents them in the PAD space using the mapping derived by 
+ * Captures the emotions from the OCC catalog [1] and represents them in the PAD space using the mapping derived by 
  * [2].
  * 
  * [1] Ortony A., Clore G. L., and Collins A. The Cognitive Structure of Emotions. Cambridge University Press, 
@@ -35,6 +35,7 @@ public class Emotion {
     public final Point3D PAD;
     public final String name;
     public double intensity; // intensity not really supported, it's either there (1) or decayed (0)
+    public String target;
     
     public static Point3D findEmotionCenter(List<Emotion> emotions) {
         /* Functional solution for brevity, time complexity in o(3n)
@@ -93,6 +94,15 @@ public class Emotion {
     }
     
     public Literal toLiteral() {
-        return ASSyntax.createLiteral(ANNOTATION_FUNCTOR, ASSyntax.createAtom(this.name));
+        Literal emLit =  ASSyntax.createLiteral(ANNOTATION_FUNCTOR, ASSyntax.createAtom(this.name));
+        if(this.target != null) {
+            Literal annot = ASSyntax.createLiteral("target",  ASSyntax.createAtom(target));
+            emLit.addAnnot(annot);
+        }
+        return emLit;
+    }
+
+    public void setTarget(String target) {
+        this.target = target;
     }
 }
