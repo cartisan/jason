@@ -187,7 +187,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
                     specialisedOptions.add(o);
                 else
                     // at least one annotation doesn't fit this personality, can't use this option
-                    this.C.AP.remove(o);
+                    it.remove();
             }
             
         }
