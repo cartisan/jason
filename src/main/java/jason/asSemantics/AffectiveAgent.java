@@ -1,7 +1,6 @@
 package jason.asSemantics;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,7 +9,6 @@ import jason.RevisionFailedException;
 import jason.architecture.AgArch;
 import jason.asSyntax.ASSyntax;
 import jason.asSyntax.Literal;
-import jason.asSyntax.PredicateIndicator;
 import jason.asSyntax.Term;
 
 /**
@@ -131,10 +129,6 @@ public class AffectiveAgent extends Agent {
         
         // Add belief about experiencing this emotion to agents BB
         this.addBel(emotion.toLiteral());
-        
-        // Add target to target list if emotion contributes to current mood
-//        if (emotion.hasTarget() && Affect.getOctant(emotion).equals(Affect.getOctant(this.getMood())))
-//            addAffectTarget(emotion.target);
     }
 
     public void removeEmotion(Emotion em) throws RevisionFailedException {
@@ -147,29 +141,22 @@ public class AffectiveAgent extends Agent {
         
         this.addBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR,
                                            ASSyntax.createAtom(newMood.getType())));
-//        this.resetAffectTarget();
     }
     
     private void updateMood() throws JasonException {
-        Iterator<Literal> it = this.getBB().getCandidateBeliefs(new PredicateIndicator(Mood.ANNOTATION_FUNCTOR, 1));
-        if(it != null) {            // for some reason "getCandidateBeliefs" returns null instead of empty iterators -.- 
-            while (it.hasNext()){
-                Literal moodLit = it.next();
-                this.delBel(moodLit);
-            }
-        }
+        Literal targetLit = this.findBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR, ASSyntax.createVar()),
+                                        new Unifier());
+        this.delBel(targetLit);
         
         this.addBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR,
                                            ASSyntax.createAtom(this.getMood().getType())));
 
-//        this.resetAffectTarget();
     }
     
     protected void addAffectTarget(String target) throws RevisionFailedException {
         this.getAffectiveTS().getAffectiveC().T.add(target);
         
         // update target beliefs in BB, too
-        
         Literal targetLit = this.findBel(ASSyntax.createLiteral("affect_target", ASSyntax.createVar()), new Unifier());
         this.delBel(targetLit);
         
@@ -182,13 +169,8 @@ public class AffectiveAgent extends Agent {
         this.getAffectiveTS().getAffectiveC().T.clear();
         
         // reset target beliefs in BB, too
-        Iterator<Literal> it = this.getBB().getCandidateBeliefs(new PredicateIndicator("affect_target", 1));
-        if(it != null) {            // for some reason "getCandidateBeliefs" returns null instead of empty iterators -.- 
-            while (it.hasNext()){
-                Literal targetLit = it.next();
-                this.delBel(targetLit);
-            }
-        }
+        Literal targetLit = this.findBel(ASSyntax.createLiteral("affect_target", ASSyntax.createVar()), new Unifier());
+        this.delBel(targetLit);
         
         this.addBel(ASSyntax.createLiteral("affect_target", ASSyntax.createList() ));
     }
