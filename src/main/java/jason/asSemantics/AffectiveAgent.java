@@ -3,6 +3,7 @@ package jason.asSemantics;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import jason.JasonException;
 import jason.RevisionFailedException;
@@ -34,12 +35,10 @@ public class AffectiveAgent extends Agent {
         ts = new AffectiveTransitionSystem(this.ts);  // the TransitionSystem sets this.ts to itself in its own init
         super.initAg();
         
-        try {
-            this.updateMood();
-        } catch (JasonException e) {
-            logger.severe("Failed to initialized mood-belief for agent: " + this.getTS().getUserAgArch().getAgName());
-            e.printStackTrace();
-        }
+        this.addInitialBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR,
+                           ASSyntax.createAtom(this.getMood().getType())));
+        this.addInitialBel(ASSyntax.createLiteral("affect_target", ASSyntax.createList() ));
+        
     }
 
     /**
@@ -87,8 +86,8 @@ public class AffectiveAgent extends Agent {
         return personality;
     }
     
-    public AffectiveTransitionSystem getAffectTS() {
-        return (AffectiveTransitionSystem) this.ts;
+    private AffectiveTransitionSystem getAffectiveTS() {
+        return (AffectiveTransitionSystem) this.getTS();
     }
 
     /**
@@ -125,13 +124,17 @@ public class AffectiveAgent extends Agent {
     
     public void addEmotion(Emotion emotion, String type) throws JasonException {
         switch(type) {
-            case "SEM": this.getAffectTS().getAffectiveC().SEM.add(emotion); break;
-            case "PEM": this.getAffectTS().getAffectiveC().PEM.add(emotion); break;
+            case "SEM": this.getAffectiveTS().getAffectiveC().SEM.add(emotion); break;
+            case "PEM": this.getAffectiveTS().getAffectiveC().PEM.add(emotion); break;
             default: throw new JasonException("Emotions can be either of type 'SEM' or 'PEM'. Type used was: " + type); 
         }
         
         // Add belief about experiencing this emotion to agents BB
         this.addBel(emotion.toLiteral());
+        
+        // Add target to target list if emotion contributes to current mood
+//        if (emotion.hasTarget() && Affect.getOctant(emotion).equals(Affect.getOctant(this.getMood())))
+//            addAffectTarget(emotion.target);
     }
 
     public void removeEmotion(Emotion em) throws RevisionFailedException {
@@ -144,10 +147,11 @@ public class AffectiveAgent extends Agent {
         
         this.addBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR,
                                            ASSyntax.createAtom(newMood.getType())));
+//        this.resetAffectTarget();
     }
     
     private void updateMood() throws JasonException {
-        Iterator<Literal> it = this.getBB().getCandidateBeliefs(new PredicateIndicator("mood", 1));
+        Iterator<Literal> it = this.getBB().getCandidateBeliefs(new PredicateIndicator(Mood.ANNOTATION_FUNCTOR, 1));
         if(it != null) {            // for some reason "getCandidateBeliefs" returns null instead of empty iterators -.- 
             while (it.hasNext()){
                 Literal moodLit = it.next();
@@ -157,10 +161,36 @@ public class AffectiveAgent extends Agent {
         
         this.addBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR,
                                            ASSyntax.createAtom(this.getMood().getType())));
-    }
 
-    private AffectiveTransitionSystem getAffectiveTS() {
-        return (AffectiveTransitionSystem) this.getTS();
+//        this.resetAffectTarget();
+    }
+    
+    protected void addAffectTarget(String target) throws RevisionFailedException {
+        this.getAffectiveTS().getAffectiveC().T.add(target);
+        
+        // update target beliefs in BB, too
+        
+        Literal targetLit = this.findBel(ASSyntax.createLiteral("affect_target", ASSyntax.createVar()), new Unifier());
+        this.delBel(targetLit);
+        
+        List<Term> targets = getAffectiveTS().getAffectiveC().T.stream().map(ASSyntax::createAtom).collect(Collectors.toList());
+        this.addBel(ASSyntax.createLiteral("affect_target", ASSyntax.createList(targets) ));
+        
+    }
+    
+    protected void resetAffectTarget() throws RevisionFailedException {
+        this.getAffectiveTS().getAffectiveC().T.clear();
+        
+        // reset target beliefs in BB, too
+        Iterator<Literal> it = this.getBB().getCandidateBeliefs(new PredicateIndicator("affect_target", 1));
+        if(it != null) {            // for some reason "getCandidateBeliefs" returns null instead of empty iterators -.- 
+            while (it.hasNext()){
+                Literal targetLit = it.next();
+                this.delBel(targetLit);
+            }
+        }
+        
+        this.addBel(ASSyntax.createLiteral("affect_target", ASSyntax.createList() ));
     }
     
     public Mood getMood() {

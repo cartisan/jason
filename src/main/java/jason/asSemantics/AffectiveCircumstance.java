@@ -14,9 +14,10 @@ public class AffectiveCircumstance extends Circumstance {
 
     private static final long serialVersionUID = 1L;
     
-    protected List<Emotion>     PEM;
-    protected List<Emotion>     SEM;
-    protected Mood              M;
+    protected List<Emotion>     PEM;        // primary emotions (reactive)
+    protected List<Emotion>     SEM;        // secondary emotions (deliberative)
+    protected Mood              M;          // mood
+    protected List<String>      T;          // emotional target agents
     
     public AffectiveCircumstance(AffectiveAgent ag) {
         super();
@@ -118,6 +119,8 @@ public class AffectiveCircumstance extends Circumstance {
         
         this.PEM = new LinkedList<Emotion>();
         this.SEM = new LinkedList<Emotion>();
+        this.T = new LinkedList<String>();
+        
         if(this.ts != null)
             this.createMood(this.getAffectiveAg());
     }

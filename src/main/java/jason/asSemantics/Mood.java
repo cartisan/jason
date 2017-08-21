@@ -20,9 +20,9 @@ import javafx.geometry.Point3D;
  * 
  * <p> See: A. Mehrabian. Analysis of the Big-Five Personality Factors in Terms of the PAD
  * Temperament Model. Australian Journal of Psychology, 48(2):86–92, 1996.
- * 
+ *  @author Leonid Berov
  */
-public class Mood implements Serializable {
+public class Mood implements Serializable, Affect {
     private static final long serialVersionUID = 1L;
     static final String ANNOTATION_FUNCTOR = "mood";
 
@@ -36,15 +36,6 @@ public class Mood implements Serializable {
     private static double MAX_UPDATE_TIME = 5;
     private static double UPDATE_STEP_LENGTH;   // gets set to ~0.7
                                                 // results in 0.4 step in each dim
-    
-                                                // -P-A-D  +P-A-D
-                                                //  |  +A   |   +A
-                                                //  |+D |+D |+D |+D  
-                                                //  | | | | | | | | 
-                                                //  [0|1|2|3|4|5|6|7]
-    private static final String[] MOOD_NAMES= {"bored", "disdainful", "anxious", "hostile",      // -P 
-                                               "docile","relaxed",    "dependent", "exuberant"}; // +P
-    
     
     public static final List<String> DIMENSIONS = Arrays.asList("pleasure", "arousal", "dominance");
     public static final Map<String, Function<Double, Boolean>> DIMENSION_CHECKS;
@@ -77,8 +68,7 @@ public class Mood implements Serializable {
         MAX_DECAY_TIME = decayTime;
         setStepLengths();
     }
-    
-    
+
     protected Logger logger = Logger.getLogger(Mood.class.getName());
     public Point3D PAD = null;
 
@@ -194,9 +184,7 @@ public class Mood implements Serializable {
     }
     
     public String getType(){
-        Function<Double,Integer> pos = d -> (d >= 0 ? 1 : 0);  // returns 1 if d is positive, else 0
-        int index = 4 * pos.apply(getP()) + 2 * pos.apply(getA()) + 1* pos.apply(getD());
-        return MOOD_NAMES[index];
+        return Affect.getOctant(this);
     }
 
     public String getStrength() {

@@ -238,10 +238,17 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         List<Emotion> emotions = this.getAffectiveC().getAllEmotions();
         this.getAffectiveC().getM().updateMood(emotions);
 
-        // if mood changed octants, update agent belief
         Mood newMood = this.getAffectiveC().getM();
         if(oldMood.getType() != newMood.getType()){
+            // if mood changed octants, update agent beliefs and reset target
             this.getAffectiveAg().updateMood(oldMood, newMood);
+            this.getAffectiveAg().resetAffectTarget();
+        } 
+
+        // see if some of the emotions contributed directly to current mood
+        for (Emotion emotion: this.getAffectiveC().getAllEmotions()) {
+            if (emotion.hasTarget() && Affect.getOctant(emotion).equals(Affect.getOctant(newMood)))
+                this.getAffectiveAg().addAffectTarget(emotion.target);
         }
     }
 

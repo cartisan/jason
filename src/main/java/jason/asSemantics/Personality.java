@@ -26,7 +26,7 @@ import jason.asSyntax.Literal;
  * 
  * <p>See: R. R. McCrae and O. P. John. An Introduction to the Five-Factor Model and its
  * Applications. Journal of personality, 60(2):175–215, 1992.
- * 
+ *  @author Leonid Berov
  */
 public class Personality implements Serializable {
     private static final long serialVersionUID = 1L;

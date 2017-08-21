@@ -17,8 +17,10 @@ import javafx.geometry.Point3D;
  *     Cambridge, MA, 1988.
  * [2] Gebhard, P. (2005). ALMA: a layered model of affect. In Proceedings of the fourth international joint
  *     conference on Autonomous agents and multiagent systems, pages 29–36, New York, USA. ACM.
+ * @author Leonid Berov
+ *
  */
-public class Emotion {
+public class Emotion implements Affect {
     static public HashMap<String, Supplier<Emotion>> EMOTIONS = new HashMap<>();
     static final String ANNOTATION_FUNCTOR = "emotion";
     
@@ -104,5 +106,9 @@ public class Emotion {
 
     public void setTarget(String target) {
         this.target = target;
+    }
+    
+    public boolean hasTarget() {
+        return (this.target != null ? true : false);
     }
 }
