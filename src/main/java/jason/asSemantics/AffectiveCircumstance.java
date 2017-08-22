@@ -1,5 +1,6 @@
 package jason.asSemantics;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,7 +18,7 @@ public class AffectiveCircumstance extends Circumstance {
     protected List<Emotion>     PEM;        // primary emotions (reactive)
     protected List<Emotion>     SEM;        // secondary emotions (deliberative)
     protected Mood              M;          // mood
-    protected List<String>      T;          // emotional target agents
+    protected HashSet<String>      T;          // emotional target agents
     
     public AffectiveCircumstance(AffectiveAgent ag) {
         super();
@@ -119,7 +120,7 @@ public class AffectiveCircumstance extends Circumstance {
         
         this.PEM = new LinkedList<Emotion>();
         this.SEM = new LinkedList<Emotion>();
-        this.T = new LinkedList<String>();
+        this.T = new HashSet<String>();
         
         if(this.ts != null)
             this.createMood(this.getAffectiveAg());
