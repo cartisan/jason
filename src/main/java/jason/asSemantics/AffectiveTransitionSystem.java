@@ -232,11 +232,12 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         
         // perform one step of decay on old mood
         // TODO: acc. Gebhard: only when no emotions are present!
-        this.getAffectiveC().getM().stepDecay(this.getAffectiveAg().getDefaultMood());
+        this.getAffectiveC().getM().stepDecay(this.getAffectiveAg().getDefaultMood(), 
+                                              this.getAffectiveAg().getPersonality());
 
         // perform one step of mood update
         List<Emotion> emotions = this.getAffectiveC().getAllEmotions();
-        this.getAffectiveC().getM().updateMood(emotions);
+        this.getAffectiveC().getM().updateMood(emotions, this.getAffectiveAg().getPersonality());
 
         Mood newMood = this.getAffectiveC().getM();
         if(oldMood.getType() != newMood.getType()){

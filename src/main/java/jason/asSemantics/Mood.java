@@ -85,7 +85,7 @@ public class Mood implements Serializable, Affect {
         return PAD.magnitude();
     }
 
-    public void updateMood(List<Emotion> emotions) {
+    public void updateMood(List<Emotion> emotions, Personality personality) {
         if (emotions.isEmpty()) {
             return;
         }
@@ -97,6 +97,7 @@ public class Mood implements Serializable, Affect {
         double averageIntensity = emotions.stream().mapToDouble( e -> e.intensity).average().getAsDouble();
         assert(1==averageIntensity);        // we don't yet support non-binary intensities
         
+        
         // each coordinate moves further into the octant where the emotion center is located
         List<Function<Point3D, Double>> dimensions = Arrays.asList(Point3D::getX, Point3D::getY, Point3D::getZ);
         for(Function<Point3D, Double> getFunc : dimensions) {
@@ -105,9 +106,14 @@ public class Mood implements Serializable, Affect {
             step.add(direction * oneDimStep * averageIntensity);
         }
         
+        // trait neuroticism correlates with higher emotional reactivity of negative affect (i.e. P-dimension)
+        // --> higher values in N should result with faster changes along the P-dimension
+        // N /in [-1,1] | neurot_factor_func: (-1) -> 0.5; 1 -> 1.5; 0 -> 0 | neurot_factor = 1 + 0.5N
+        double neuroticism_factor = 1.0 + 0.5 * personality.N;
+        
         // compute new Mood, take bounds into account
         assert(3==step.size());
-        Point3D stepVec = new Point3D(step.get(0),
+        Point3D stepVec = new Point3D(step.get(0) * neuroticism_factor,
                                       step.get(1),
                                       step.get(2));
         
@@ -132,7 +138,7 @@ public class Mood implements Serializable, Affect {
      * than that, this mood is set to defaultMood instead. Method computes unit vector from this in the direction
      * of defaultMood, than updates this.PAD values by adding the unit vector times DECAY_STEP_LENGTH.  
      */
-    public void stepDecay(Mood defaultMood) {
+    public void stepDecay(Mood defaultMood, Personality personality) {
         Point3D diffVec = defaultMood.PAD.subtract(this.PAD);
         
         // check if distance to default mood is smaller then one decay step
@@ -142,11 +148,36 @@ public class Mood implements Serializable, Affect {
             return;
         }
         
-        // compute the unit vector with length 1 and angle leading to defaultMood
-        Point3D stepVec = diffVec.normalize();
+        // compute direction vector: length 1 and angle leading to defaultMood
+        Point3D stepDirection = diffVec.normalize();
+        
+        // direction vec needs to be (scalar) multiplied with step_length so its magnitude changes to step_length
+        // /sqrt((a²+b²)) = 1  --  *STEP --> sqrt((a²+b²))*STEP = STEP ---> sqrt((STEP²a² + STEP²b²)) = STEP ---> a' = STEP*a, b' = STEP * b
+        double[] stepLengths = {DECAY_STEP_LENGTH, DECAY_STEP_LENGTH, DECAY_STEP_LENGTH};
+        
+        // trait neuroticism correlates with higher emotional reactivity of negative affect (i.e. P-dimension)
+        // --> higher values in N should result in slower decay along the P-dimension
+        // N /in [-1,1] | neurot_factor_func: (-1) -> 1.5; 1 -> 0.5; 0 -> 0 | neurot_factor = 1 - 0.5N
+        double neuroticism_factor = 1.0 - 0.5 * personality.N;
+        
+        // if we scale the P-dim in a vector but want to keep is magnitude the same, then we need to also scale A and D dim, too:
+        // solve for X: p²+a²+d²  =  (neuro_fac * p)² + (X * a)² + (X * d)²       long form:
+        // double downscaling_factor = Math.sqrt(   (   -Math.pow(neuroticism_factor*oneDimStepLength, 2) + Math.pow(DECAY_STEP_LENGTH, 2)   )  /  (2*Math.pow(oneDimStepLength, 2))   );
+        double downscaling_factor = Math.sqrt(   (3 - Math.pow(neuroticism_factor, 2) )  / 2  );
+
+        // scale for neuroticism:
+        double[] scaledStepLengths = { neuroticism_factor * stepLengths[0],
+                                       downscaling_factor * stepLengths[1],
+                                       downscaling_factor * stepLengths[2] };
+        
+        Point3D step = new Point3D(stepDirection.getX() * scaledStepLengths[0],
+                                   stepDirection.getY() * scaledStepLengths[1],
+                                   stepDirection.getZ() * scaledStepLengths[2]);
+        
+        //assert(DECAY_STEP_LENGTH == step.magnitude());
         
         // perform a step if length DECAY_STEP_LENGTH
-        this.PAD = this.PAD.add(stepVec.multiply(DECAY_STEP_LENGTH));
+        this.PAD = this.PAD.add(step);
     }
     
     public double getP() {

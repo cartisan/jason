@@ -100,4 +100,9 @@ public class Personality implements Serializable {
         }
         
     }
+    
+    @Override
+    public String toString() {
+    	return String.format("O: %s C: %s E: %s A: %s N: %s", O, C, E, A, N);
+    }
 }
