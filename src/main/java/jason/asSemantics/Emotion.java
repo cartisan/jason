@@ -24,14 +24,50 @@ public class Emotion implements Affect {
     static public HashMap<String, Supplier<Emotion>> EMOTIONS = new HashMap<>();
     static final String ANNOTATION_FUNCTOR = "emotion";
     
+    /* Choosing an emotion acc. to OCC, decision tree:
+     * [valenced reaction to] --- [aspects of objects] ----------------------------------------------------------- love / hate 
+     * 						  |	
+     * 						  --- [actions of agents] ---------- [other agent] ----------------------------------- admiration / reproach
+     * 						  |						  |
+     * 						  |						  ---------- [self agent]  ----------------------------------- pride / shame
+     *						  | 
+     * 						  --- [consequences of events] ----- [conseq. for self] --- [prospects irrelevant] --- joy / distress
+     * 						  |							   |  				        |	
+     * 						  |							   |					    --- [prospects relevant] ----- hope / fear
+     * 						  |							   |						  	         [confirmed] ----- satisfaction / fears-confirmed
+     * 						  |							   |								  [disconfirmed] ----- relief / disappointment
+     * 						  |							   |
+     *  					  |							   ----- [conseq. for others] --- [desirable for oth.] --- happy-for/resentment
+     *  					  |													  	  |
+     *  					  |														  --- [undesirable f. oth.] -- gloating / pity
+     *  					  |
+     *  					  --- [conseq. of agent actions] --- [other agent] ----------------------------------- gratitude /anger
+     *  													 |
+     *  													 --- [self agent] -------------------------------------gratification / remorse
+     */	
     static {
-        // TODO: Complete list of emotions
-        EMOTIONS.put("anger",           () -> new Emotion(-0.51, 0.59, 0.25, "anger"));
-        EMOTIONS.put("disappointment",  () -> new Emotion(-0.3, 0.1, -0.4, "disapointment"));
-        EMOTIONS.put("gratitude",       () -> new Emotion(0.4, 0.2, -0.3, "gratitude"));
-        EMOTIONS.put("satisfaction",    () -> new Emotion(0.3, -0.2, 0.4, "satisfaction"));
-        EMOTIONS.put("joy",             () -> new Emotion(0.4, 0.2, 0.1, "joy"));
+        EMOTIONS.put("gratification",   () -> new Emotion(0.6, 0.5, 0.4, "gratification"));
+    	EMOTIONS.put("admiration",      () -> new Emotion(0.5, 0.3, -0., "admiration"));
         EMOTIONS.put("pride",           () -> new Emotion(0.4, 0.3, 0.3, "pride"));
+        EMOTIONS.put("happy_for",       () -> new Emotion(0.4, 0.2, 0.2, "happy_for"));
+        EMOTIONS.put("joy",             () -> new Emotion(0.4, 0.2, 0.1, "joy"));
+        EMOTIONS.put("gratitude",       () -> new Emotion(0.4, 0.2, -0.3, "gratitude"));
+        EMOTIONS.put("love",            () -> new Emotion(0.3, 0.1, 0.2, "love"));
+        EMOTIONS.put("satisfaction",    () -> new Emotion(0.3, -0.2, 0.4, "satisfaction"));
+        EMOTIONS.put("gloating",        () -> new Emotion(0.3, -0.3, -0.1, "gloating"));
+        EMOTIONS.put("hope",            () -> new Emotion(0.2, 0.2, -0.1, "hope"));
+        EMOTIONS.put("relief",		    () -> new Emotion(0.2, -0.3, 0.4, "relief"));
+        EMOTIONS.put("resentment",    	() -> new Emotion(-0.2, -0.3, -0.2, "resentment"));
+        EMOTIONS.put("disappointment",  () -> new Emotion(-0.3, 0.1, -0.4, "disappointment"));
+        EMOTIONS.put("remorse",    		() -> new Emotion(-0.3, 0.1, -0.6, "remorse"));
+        EMOTIONS.put("shame",    		() -> new Emotion(-0.3, 0.1, -0.6, "shame"));
+        EMOTIONS.put("reproach",    	() -> new Emotion(-0.3, -0.1, 0.4, "reproach"));
+        EMOTIONS.put("distress",        () -> new Emotion(-0.4, -0.2, -0.5, "distress"));
+        EMOTIONS.put("pity",    		() -> new Emotion(-0.4, -0.2, -0.5, "pity"));
+        EMOTIONS.put("fears_confirmed", () -> new Emotion(-0.5, -0.3, -0.7, "fears_confirmed"));
+        EMOTIONS.put("anger",           () -> new Emotion(-0.51, 0.59, 0.25, "anger"));
+        EMOTIONS.put("hate",            () -> new Emotion(-0.6, 0.6, 0.3, "hate"));
+        EMOTIONS.put("fear",            () -> new Emotion(-0.64, -0.6, -0.43, "fear"));
     }
 
     public final Point3D PAD;
