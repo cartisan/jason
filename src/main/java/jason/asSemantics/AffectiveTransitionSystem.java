@@ -16,6 +16,7 @@ import jason.runtime.Settings;
 
 public class AffectiveTransitionSystem extends TransitionSystem {
     private String originalStepDeliberate = "";
+    public int moodCycleNumber = 0;
     
     /**
      * Contains emotion names of emotions appraised during ASL reasoning.
@@ -39,6 +40,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         this.C = affC;
         affC.setTS(this);
     }
+
     
     @Override
     protected void applySemanticRuleSense() throws JasonException {
@@ -55,7 +57,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         getLogger().fine(this.toString() + " deliberate step: " + stepSense);
         switch (stepDeliberate) {
             case "DeriveSEM":     applyDeriveSEM(); break; 
-            case "UpMood":        applyUpMood(); break; 
+            case "UpMood":        applyUpMood(); this.moodCycleNumber += 1; break; 
         default:
             super.applySemanticRuleDeliberate();  
         }
@@ -240,11 +242,17 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         this.getAffectiveC().getM().updateMood(emotions, this.getAffectiveAg().getPersonality());
 
         Mood newMood = this.getAffectiveC().getM();
-        if(oldMood.getType() != newMood.getType()){
-            // if mood changed octants, update agent beliefs and reset target
-            this.getAffectiveAg().updateMood(oldMood, newMood);
-            this.getAffectiveAg().resetAffectTarget();
-        } 
+        
+        // allow agent to react to change of mood values
+        if(!(oldMood.equals(newMood))) {
+            this.getAffectiveAg().updateMoodValue(newMood, this.moodCycleNumber);
+
+            // if mood changed octants, update agent beliefs and reset target list
+            if(oldMood.getType() != newMood.getType()){
+                this.getAffectiveAg().updateMoodType(oldMood, newMood);
+                this.getAffectiveAg().resetAffectTarget();
+            } 
+        }
 
         // see if some of the emotions contributed directly to current mood
         for (Emotion emotion: this.getAffectiveC().getAllEmotions()) {

@@ -103,7 +103,7 @@ public class AffectiveAgent extends Agent {
     public void initializePersonality(Personality personality) throws JasonException {
         this.personality = personality;
         ((AffectiveCircumstance) this.ts.getC()).setMood(this.personality.defaultMood());
-        this.updateMood();
+        this.updateMoodType();
     }
 
     public Mood getDefaultMood() {
@@ -135,7 +135,11 @@ public class AffectiveAgent extends Agent {
         this.delBel(em.toLiteral());
     }
     
-    public void updateMood(Mood oldMood, Mood newMood) throws JasonException {
+    /**
+     * Gets called by {@linkplain AffectiveTransitionSystem} each time the mood type changes
+     * due to mood updated during the reasoning cycle.
+     */
+    public void updateMoodType(Mood oldMood, Mood newMood) throws JasonException {
         this.delBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR,
                                            ASSyntax.createAtom(oldMood.getType())));
         
@@ -143,7 +147,7 @@ public class AffectiveAgent extends Agent {
                                            ASSyntax.createAtom(newMood.getType())));
     }
     
-    private void updateMood() throws JasonException {
+    private void updateMoodType() throws JasonException {
         Literal targetLit = this.findBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR, ASSyntax.createVar()),
                                         new Unifier());
         this.delBel(targetLit);
@@ -151,6 +155,14 @@ public class AffectiveAgent extends Agent {
         this.addBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR,
                                            ASSyntax.createAtom(this.getMood().getType())));
 
+    }
+    
+    /**
+     * Gets called by {@linkplain AffectiveTransitionSystem} each time the values of the current
+     * mood are updated during the reasoning cycle. Subclasses can implement custom behavior to react.
+     */
+    protected void updateMoodValue(Mood newMood, int cycleNumber) {
+        // abstract method, customer class can override this if required
     }
     
     protected void addAffectTarget(String target) throws RevisionFailedException {

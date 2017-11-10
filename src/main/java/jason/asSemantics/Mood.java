@@ -39,9 +39,6 @@ public class Mood implements Serializable, Affect {
     
     public static final List<String> DIMENSIONS = Arrays.asList("pleasure", "arousal", "dominance");
     public static final Map<String, Function<Double, Boolean>> DIMENSION_CHECKS;
-    static {
-    }
-    
     
     static {
         // executed at class loading time to initialize DECAY_STEP_LENGTH and UPDATE_STEP_LENGTH 
@@ -185,6 +182,23 @@ public class Mood implements Serializable, Affect {
     @Override
     public String toString() {
         return String.format("(%.4f, %.4f, %.4f) ", PAD.getX(), PAD.getY(), PAD.getZ()) + this.getFullName();
+    }
+    
+    @Override
+    public int hashCode() {
+        return this.PAD.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+       if (!(obj instanceof Mood))
+            return false;
+       
+        if (obj == this)
+            return true;
+
+        Mood other = (Mood) obj;
+        return this.PAD.equals(other.PAD);
     }
     
     /**
