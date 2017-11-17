@@ -41,6 +41,13 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         affC.setTS(this);
     }
 
+    @Override
+    public boolean canSleepDeliberate() {
+    	boolean canSleep = super.canSleepDeliberate() && this.getAffectiveC().getPEM().isEmpty();
+    	if(canSleep) 
+    		getLogger().fine("Recommended that deliberate sleeps for this reasoning cycle");
+        return canSleep;
+    }
     
     @Override
     protected void applySemanticRuleSense() throws JasonException {
@@ -54,13 +61,19 @@ public class AffectiveTransitionSystem extends TransitionSystem {
 
     @Override
     protected void applySemanticRuleDeliberate() throws JasonException {
-        getLogger().fine(this.toString() + " deliberate step: " + stepSense);
+        getLogger().fine(this.toString() + " deliberate step: " + stepDeliberate);
         switch (stepDeliberate) {
             case "DeriveSEM":     applyDeriveSEM(); break; 
             case "UpMood":        applyUpMood(); this.moodCycleNumber += 1; break; 
         default:
             super.applySemanticRuleDeliberate();  
         }
+    }
+    
+    @Override
+    protected void applySemanticRuleAct() throws JasonException {
+        getLogger().fine(this.toString() + " act step: " + stepAct);
+        super.applySemanticRuleAct();
     }
     
     /* ------ Sense States ------------ */
@@ -122,7 +135,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         }
 
         if (this.C.hasEvent()) {
-            // first deal with mood events, so we don't end up deliberating based on wrong mood-belief
+            // first deal with +/-mood events, so we don't end up deliberating based on wrong mood-belief
             for(Event ev : this.C.getEvents()) {
                 if (ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("mood")) {
                     this.C.getEvents().remove(ev);
@@ -142,9 +155,9 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             }
         }
         // Rule SelEv2
-        // directly to deriveSEM and then to ProcAct if no event to handle
-        this.stepDeliberate = "DeriveSEM";
+        // directly to deriveSEM and updateMood, then to ProcAct if no event to handle
         this.originalStepDeliberate = "ProcAct";
+        this.stepDeliberate = "DeriveSEM";
     }
     
     @Override
@@ -167,6 +180,55 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         
         this.originalStepDeliberate = this.stepDeliberate;
         this.stepDeliberate = "DeriveSEM";
+    }
+    
+    protected void applyDeriveSEM() throws JasonException {
+        this.stepDeliberate = "UpMood";
+        
+        // apply one decay step on old sem
+        this.getAffectiveC().stepDecaySEM();
+        
+        
+        // derive new sem
+        // TODO: perform more appraisal that e.g. takes into account C.RP?
+        synchronized(deliberative_appraisal) {
+            for(Emotion emotion : this.deliberative_appraisal) {
+                this.getAffectiveAg().addEmotion(emotion, "SEM");
+            }
+            this.deliberative_appraisal.clear();
+        }
+    }
+    
+    protected void applyUpMood() throws JasonException {
+        this.stepDeliberate = this.originalStepDeliberate;
+        Mood oldMood = this.getAffectiveC().getM().clone();
+        
+        // perform one step of decay on old mood
+        // TODO: acc. Gebhard: only when no emotions are present!
+        this.getAffectiveC().getM().stepDecay(this.getAffectiveAg().getDefaultMood(), 
+                                              this.getAffectiveAg().getPersonality());
+        
+        // perform one step of mood update
+        List<Emotion> emotions = this.getAffectiveC().getAllEmotions();
+        this.getAffectiveC().getM().updateMood(emotions, this.getAffectiveAg().getPersonality());
+        
+        Mood newMood = this.getAffectiveC().getM().clone();
+        // allow agent to react to change of mood values
+        if(!(oldMood.equals(newMood))) {
+            this.getAffectiveAg().updateMoodValue(newMood, this.moodCycleNumber);
+            
+            // if mood changed octants, update agent beliefs and reset target list
+            if(oldMood.getType() != newMood.getType()){
+                this.getAffectiveAg().updateMoodType(oldMood, newMood);
+                this.getAffectiveAg().resetAffectTarget();
+            } 
+        }
+        
+        // see if some of the emotions contributed directly to current mood
+        for (Emotion emotion: this.getAffectiveC().getAllEmotions()) {
+            if (emotion.hasTarget() && Affect.getOctant(emotion).equals(Affect.getOctant(newMood)))
+                this.getAffectiveAg().addAffectTarget(emotion.target);
+        }
     }
     
     @Override
@@ -209,56 +271,6 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         //we've been removing options in AP, if no options are left, proceed as usual in such a case
         if (this.C.AP.isEmpty())
             this.applyRelApplPlRule2("applicable");
-    }
-    
-    protected void applyDeriveSEM() throws JasonException {
-        this.stepDeliberate = "UpMood";
-
-        // apply one decay step on old sem
-        this.getAffectiveC().stepDecaySEM();
-        
-
-        // derive new sem
-        // TODO: perform more appraisal that e.g. takes into account C.RP?
-        synchronized(deliberative_appraisal) {
-            for(Emotion emotion : this.deliberative_appraisal) {
-                this.getAffectiveAg().addEmotion(emotion, "SEM");
-            }
-            this.deliberative_appraisal.clear();
-        }
-    }
-    
-    protected void applyUpMood() throws JasonException {
-        this.stepDeliberate = this.originalStepDeliberate;
-        Mood oldMood = this.getAffectiveC().getM().clone();
-        
-        // perform one step of decay on old mood
-        // TODO: acc. Gebhard: only when no emotions are present!
-        this.getAffectiveC().getM().stepDecay(this.getAffectiveAg().getDefaultMood(), 
-                                              this.getAffectiveAg().getPersonality());
-
-        // perform one step of mood update
-        List<Emotion> emotions = this.getAffectiveC().getAllEmotions();
-        this.getAffectiveC().getM().updateMood(emotions, this.getAffectiveAg().getPersonality());
-
-        Mood newMood = this.getAffectiveC().getM();
-        
-        // allow agent to react to change of mood values
-        if(!(oldMood.equals(newMood))) {
-            this.getAffectiveAg().updateMoodValue(newMood, this.moodCycleNumber);
-
-            // if mood changed octants, update agent beliefs and reset target list
-            if(oldMood.getType() != newMood.getType()){
-                this.getAffectiveAg().updateMoodType(oldMood, newMood);
-                this.getAffectiveAg().resetAffectTarget();
-            } 
-        }
-
-        // see if some of the emotions contributed directly to current mood
-        for (Emotion emotion: this.getAffectiveC().getAllEmotions()) {
-            if (emotion.hasTarget() && Affect.getOctant(emotion).equals(Affect.getOctant(newMood)))
-                this.getAffectiveAg().addAffectTarget(emotion.target);
-        }
     }
 
     @Override
