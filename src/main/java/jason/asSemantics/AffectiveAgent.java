@@ -161,7 +161,7 @@ public class AffectiveAgent extends Agent {
      * Gets called by {@linkplain AffectiveTransitionSystem} each time the values of the current
      * mood are updated during the reasoning cycle. Subclasses can implement custom behavior to react.
      */
-    protected void updateMoodValue(Mood newMood, int cycleNumber) {
+    protected void updateMoodValue(Mood newMood) {
         // abstract method, customer class can override this if required
     }
     
