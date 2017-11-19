@@ -16,11 +16,11 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
-version '2.1'
-group   'org.jason-lang'
+version '1.0'
+group   'org.jason-lang.o3a'
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 
 repositories {
@@ -80,19 +80,27 @@ task copyJarsToBuild {
 			filter {
 				String line -> line.replaceAll("JadeREL", file(project.configurations.compile.find { it.name.startsWith("jade-") }).name)
 			}
-        }
+     	}   
     }
 }
 
 jar {
-    baseName 'jason'
+    baseName 'jason-o3a'
     manifest {
         attributes 'Main-Class': 'jason.util.ConfigGUI',
                    'Specification-Title': 'Jason Language',
                    'Specification-Version': project.version,
                    'Implementation-Version': new Date().toString()
     }
-
+    doLast {
+    	delete "C:/Users/Leon/eclipse-workspace/plotmas/lib/jason-o3a-1.0.jar"
+        copy {
+        	from 'build/libs/'
+        	into 'C:/Users/Leon/eclipse-workspace/plotmas/lib'
+        	include 'jason-o3a-1.0.jar'
+        	println "hell"
+        }
+    }
     /*doFirst {
         Properties props = new Properties()
         props.put('version', '')
@@ -343,6 +351,8 @@ uploadArchives {
 */
 
 compileJavacc {
+	compileJava.options.fork = true
+	compileJava.options.forkOptions.executable = 'C:/Program Files/Java/jdk1.8.0_111/bin/javac.exe'
     inputDirectory = file('src/main/javacc')
     outputDirectory = file(project.buildDir.absolutePath + '/generated/javacc')
 }
