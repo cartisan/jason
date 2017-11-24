@@ -36,14 +36,6 @@ public class Personality implements Serializable {
     public static final List<String> TRAITS = 
             Arrays.asList("openness", "conscientiousness", "extraversion", "agreeableness", "neuroticism");
 
-    public static final Map<String, Function<Double, Boolean>> TRAIT_CHECKS;
-    static {
-        TRAIT_CHECKS = new HashMap<String, Function<Double, Boolean>>(); 
-        TRAIT_CHECKS.put("low",    val -> val <= -0.7);
-        TRAIT_CHECKS.put("medium", val -> val > -0.7 && val < 0.7);
-        TRAIT_CHECKS.put("high",   val -> val >= 0.7);
-    }
-    
     public double O;
     public double C;
     public double E;
@@ -85,17 +77,17 @@ public class Personality implements Serializable {
             logger.severe("personality annotation: " + personalityLit.toString() + " uses an illegal trait name");
             return false;
         }
-        if (!TRAIT_CHECKS.containsKey(bound)) {
+        if (!AffectiveDimensionChecks.BOUNDARIES.containsKey(bound)) {
             logger.severe("personality annotation: " + personalityLit.toString() + " uses an illegal trait boundary");
             return false;
         }
             
         switch(trait) {
-            case "openness":            return TRAIT_CHECKS.get(bound).apply(this.O);
-            case "conscientiousness":   return TRAIT_CHECKS.get(bound).apply(this.C);
-            case "extraversion":        return TRAIT_CHECKS.get(bound).apply(this.E);
-            case "agreeableness":       return TRAIT_CHECKS.get(bound).apply(this.A);
-            case "neuroticism":         return TRAIT_CHECKS.get(bound).apply(this.N);
+            case "openness":            return AffectiveDimensionChecks.BOUNDARIES.get(bound).apply(this.O);
+            case "conscientiousness":   return AffectiveDimensionChecks.BOUNDARIES.get(bound).apply(this.C);
+            case "extraversion":        return AffectiveDimensionChecks.BOUNDARIES.get(bound).apply(this.E);
+            case "agreeableness":       return AffectiveDimensionChecks.BOUNDARIES.get(bound).apply(this.A);
+            case "neuroticism":         return AffectiveDimensionChecks.BOUNDARIES.get(bound).apply(this.N);
             default:                    return false;
         }
         
@@ -103,6 +95,6 @@ public class Personality implements Serializable {
     
     @Override
     public String toString() {
-    	return String.format("O: %s C: %s E: %s A: %s N: %s", O, C, E, A, N);
+        return String.format("O: %s C: %s E: %s A: %s N: %s", O, C, E, A, N);
     }
 }

@@ -2,10 +2,8 @@ package jason.asSemantics;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
@@ -38,19 +36,6 @@ public class Mood implements Serializable, Affect {
                                                 // results in 0.4 step in each dim
     
     public static final List<String> DIMENSIONS = Arrays.asList("pleasure", "arousal", "dominance");
-    public static final Map<String, Function<Double, Boolean>> DIMENSION_CHECKS;
-    
-    static {
-        // executed at class loading time to initialize DECAY_STEP_LENGTH and UPDATE_STEP_LENGTH 
-        setStepLengths();
-
-        // initialize possible checks on the dimensions of a mood
-        DIMENSION_CHECKS = new HashMap<String, Function<Double, Boolean>>(); 
-        DIMENSION_CHECKS.put("positive", val -> val >= 0);
-        DIMENSION_CHECKS.put("negative", val -> val < 0);
-        DIMENSION_CHECKS.put("high",   val -> val >= 0.7);
-        DIMENSION_CHECKS.put("low",   val -> val <= -0.7);
-    }
 
     public static void setStepLengths() {
         // maximal dist. in PDA space: (1,1,1) to (-1,-1,-1) --> d_max = sqrt(2²+2²+2²) = 3.46
@@ -243,15 +228,15 @@ public class Mood implements Serializable, Affect {
             logger.severe("mood annotation: " + constraint.toString() + " uses an illegal dimension name");
             return false;
         }
-        if (!DIMENSION_CHECKS.containsKey(bound)) {
+        if (!AffectiveDimensionChecks.BOUNDARIES.containsKey(bound)) {
             logger.severe("personality annotation: " + constraint.toString() + " uses an illegal trait boundary");
             return false;
         }
             
         switch(dimension) {
-            case "pleasure":    return DIMENSION_CHECKS.get(bound).apply(this.getP());
-            case "arousal":     return DIMENSION_CHECKS.get(bound).apply(this.getA());
-            case "dominance":   return DIMENSION_CHECKS.get(bound).apply(this.getD());
+            case "pleasure":    return AffectiveDimensionChecks.BOUNDARIES.get(bound).apply(this.getP());
+            case "arousal":     return AffectiveDimensionChecks.BOUNDARIES.get(bound).apply(this.getA());
+            case "dominance":   return AffectiveDimensionChecks.BOUNDARIES.get(bound).apply(this.getD());
             default:            return false;
         }
     }

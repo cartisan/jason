@@ -92,13 +92,13 @@ jar {
                    'Specification-Version': project.version,
                    'Implementation-Version': new Date().toString()
     }
+    from sourceSets.main.allSource
     doLast {
     	delete "C:/Users/Leon/eclipse-workspace/plotmas/lib/jason-o3a-1.0.jar"
         copy {
         	from 'build/libs/'
         	into 'C:/Users/Leon/eclipse-workspace/plotmas/lib'
         	include 'jason-o3a-1.0.jar'
-        	println "hell"
         }
     }
     /*doFirst {
@@ -231,6 +231,12 @@ eclipse {
     }
 }
 
+task sourceJar (type : Jar) {
+    baseName 'jason'
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
 task javadoc(overwrite: true, dependsOn: compileJava) {
     setDescription('Generates Javadoc API documentation with UMLGraph diagrams')
     setGroup(JavaBasePlugin.DOCUMENTATION_GROUP)
@@ -277,12 +283,6 @@ task javadocJar (type: Jar, dependsOn: javadoc) {
     baseName 'jason'
     classifier = 'javadoc'
     from '${docsDir}/../../doc/api'
-}
-
-task sourceJar (type : Jar) {
-    baseName 'jason'
-    classifier = 'sources'
-    from sourceSets.main.allSource
 }
 
 /*
