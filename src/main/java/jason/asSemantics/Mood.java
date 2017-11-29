@@ -37,6 +37,11 @@ public class Mood implements Serializable, Affect {
     
     public static final List<String> DIMENSIONS = Arrays.asList("pleasure", "arousal", "dominance");
 
+    static {
+        // executed at class loading time to initialize DECAY_STEP_LENGTH and UPDATE_STEP_LENGTH 
+        setStepLengths();
+    }
+    
     public static void setStepLengths() {
         // maximal dist. in PDA space: (1,1,1) to (-1,-1,-1) --> d_max = sqrt(2²+2²+2²) = 3.46
         // we want a mood to completely decay back to default mood in at most 10 cycles
