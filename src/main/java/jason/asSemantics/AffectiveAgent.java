@@ -110,12 +110,55 @@ public class AffectiveAgent extends Agent {
         return this.personality.defaultMood();
     }
     
-    public boolean checkConstraint(Literal constraint) {
-        switch(constraint.getFunctor()) {
-            case Personality.ANNOTATION_FUNCTOR:    return this.personality.checkConstraint(constraint);
-            case Mood.ANNOTATION_FUNCTOR:           return this.getMood().checkConstraint(constraint);
-            default: logger.severe("plan annotation: " +constraint.toString() + " has invalid functor."); return false;
+    /**
+     * Checks if the current state of an agent conforms with the affective condition specified by a plan
+     * annotation.<br>
+     * This method recursively resolves the condition, of form e.g. <code>and(personality(E,high),mood(P,low))</code>, by
+     * resolving the functor and collecting the results of subordinate checkConstraint calls executed on the terms
+     * of this functor. Possible functors are: <i>and, or, not, mood</i> and <i> personality </i>.
+     * @param condition
+     * @return true if agent fits condition in it's current state, false otherwise 
+     */
+    public boolean checkConstraint(Literal condition) {
+        switch(condition.getFunctor()) {
+            case Personality.ANNOTATION_FUNCTOR: {
+                //personality(E,hi)
+                return this.personality.checkConstraint(condition);
+            }
+            case Mood.ANNOTATION_FUNCTOR:{
+                //mood(P,lo)
+                return this.getMood().checkConstraint(condition);
+            }
+            case "and": {
+                // and(personality(E,hi),mood(P,lo)))
+                List<Term> conditions = condition.getTerms();               
+                return conditions.stream().allMatch(term -> this.checkConstraint((Literal) term));
+            }
+            case "or": {
+                // or(personality(E,hi),mood(P,lo)))
+                List<Term> conditions = condition.getTerms();               
+                return conditions.stream().anyMatch(term -> this.checkConstraint((Literal) term));
+            }
+            // For some weird reason jason appends a space to our 'not' annotations...
+            case "not ": {
+                List<Term> innerCondition = condition.getTerms();
+                if(!(innerCondition.size()==1)) {
+                    // condition to be negated should contain a function, not a list
+                    getLogger().severe("ERROR: Plan annotation " + condition.toString() + " is malformed, too many terms.");
+                    throw new RuntimeException(condition.toString() + " not a valid affective constraint.");
+                }
                 
+                // not(mood(arousal,high))
+                // not(and(personality(E,hi),mood(P,lo)))
+                // we want to return false if this agent fits the inner condition 
+                return !(this.checkConstraint((Literal) innerCondition.get(0)));
+            }
+            default: {
+                logger.severe("*** ERROR in AffectiveAgent::checkConstraint >> Plan annotation " + 
+                              condition.toString() +
+                              " has invalid functor.");
+                throw new RuntimeException("plan annotation: " +condition.toString() + " has invalid functor.");
+            }
         }
         
     }

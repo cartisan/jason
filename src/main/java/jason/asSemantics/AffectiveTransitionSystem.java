@@ -250,13 +250,23 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             Option o = it.next();
             
             Literal affect_condition = (Literal) o.getPlan().getLabel().getAnnots("affect").getTerm();
-            // affect annotations are present in this option, form:[affect(personality(openness, high), mood(...), ...)]
-            
             if (affect_condition != null) {
-                List<Term> conditions = affect_condition.getTerms();
-                if (conditions.stream().allMatch(term -> this.getAffectiveAg().checkConstraint((Literal) term)))
-                    // if all terms in annotations fit our agent, save this option as a specialized option 
+              List<Term> innerConditions = affect_condition.getTerms();               
+              if(!(innerConditions.size()==1)) {
+                  // list of conditions instead of: functor(term1,term2)
+                  // e.g. affect(personality(E,hi),mood(P,lo))
+                  getLogger().severe("*** ERROR in AffectiveTransitionSystem::applyApplPl >> Plan annotation " +
+                                     affect_condition.toString() + 
+                                     " is malformed, too many terms.");
+                  throw new RuntimeException(affect_condition.toString() + " not a valid affective constraint.");
+              }
+                
+                // a valid inner affective condition is present in this option
+                // form e.g. :[affect(and(personality(openness, high),not(mood(...)), ...))]
+                if(this.getAffectiveAg().checkConstraint((Literal) innerConditions.get(0))) {
+                    // if all terms in the annotation fit our agent, save this option as a specialized option 
                     specialisedOptions.add(o);
+                }
                 else
                     // at least one annotation doesn't fit this personality, can't use this option
                     it.remove();

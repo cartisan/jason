@@ -222,7 +222,7 @@ public class Mood implements Serializable, Affect {
     public boolean checkConstraint(Literal constraint) {
         // check that literal complies with form: personality(trait, trait-bound)
         if(constraint.getArity() != 2) {
-            logger.severe("personality annotation: " + constraint.toString() + " has wrong arity. Should be 2.");
+            logger.severe("*** ERROR: Mood annotation " + constraint.toString() + " has wrong arity. Should be 2.");
             return false;
         }
         
@@ -230,11 +230,11 @@ public class Mood implements Serializable, Affect {
         String dimension = constraint.getTerm(0).toString();
         String bound = constraint.getTerm(1).toString();
         if (!DIMENSIONS.contains(dimension)) {
-            logger.severe("mood annotation: " + constraint.toString() + " uses an illegal dimension name");
+            logger.severe("*** ERROR: Mood annotation: " + constraint.toString() + " uses an illegal dimension name");
             return false;
         }
         if (!AffectiveDimensionChecks.BOUNDARIES.containsKey(bound)) {
-            logger.severe("personality annotation: " + constraint.toString() + " uses an illegal trait boundary");
+            logger.severe("*** ERROR: Mood annotation: " + constraint.toString() + " uses an illegal trait boundary");
             return false;
         }
             

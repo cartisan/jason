@@ -2,10 +2,7 @@ package jason.asSemantics;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 import java.util.logging.Logger;
 
 import jason.asSyntax.Literal;
@@ -66,7 +63,7 @@ public class Personality implements Serializable {
     public boolean checkConstraint(Literal personalityLit) {
         // check that literal complies with form: personality(trait, trait-bound)
         if(personalityLit.getArity() != 2) {
-            logger.severe("personality annotation: " + personalityLit.toString() + " has wrong arity. Should be 2.");
+            logger.severe("*** ERROR: Personality annotation: " + personalityLit.toString() + " has wrong arity. Should be 2.");
             return false;
         }
         
@@ -74,11 +71,11 @@ public class Personality implements Serializable {
         String trait = personalityLit.getTerm(0).toString();
         String bound = personalityLit.getTerm(1).toString();
         if (!TRAITS.contains(trait)) {
-            logger.severe("personality annotation: " + personalityLit.toString() + " uses an illegal trait name");
+            logger.severe("*** ERROR: Personality annotation: " + personalityLit.toString() + " uses an illegal trait name");
             return false;
         }
         if (!AffectiveDimensionChecks.BOUNDARIES.containsKey(bound)) {
-            logger.severe("personality annotation: " + personalityLit.toString() + " uses an illegal trait boundary");
+            logger.severe("*** ERROR: Personality annotation: " + personalityLit.toString() + " uses an illegal trait boundary");
             return false;
         }
             
