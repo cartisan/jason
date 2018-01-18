@@ -60,6 +60,9 @@ public class CentralisedAgArch extends AgArch implements Runnable {
     public static void removeMsgListener(MsgListener l) {
         msgListeners.remove(l);
     }
+    protected static List<MsgListener> getMsgListeners() {
+        return msgListeners;
+    }
 
     /**
      * Creates the user agent architecture, default architecture is

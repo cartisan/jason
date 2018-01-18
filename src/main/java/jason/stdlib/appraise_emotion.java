@@ -18,11 +18,12 @@ import jason.asSyntax.Term;
   
   <p>Parameters:<ul>
   <li>emotion (atom): the emotion to be appraised, see {@link jason.asSemantics.Emotion} for emotion list
+  <li>target (atom): the agent the emotion is targeted at [optional]
   </ul>
   
   Examples:<ul> 
-  <li> <code>.appraise_emotion(joy)</code>: adds "joy" to list of deliberative emotions to be appraised next cycle
-  </li>
+  <li> <code>.appraise_emotion(joy)</code>: adds "joy" to list of deliberative emotions to be appraised next cycle </li>
+  <li> <code>.appraise_emotion(angry,bob)</code>: adds an angry emotion targeted at the agent bob </li>
   </ul>
   
   @author Leonid Berov
@@ -47,6 +48,8 @@ public class appraise_emotion extends DefaultInternalAction {
             ((AffectiveTransitionSystem) ts).scheduleForAppraisal(args[0].toString());
         else
             ((AffectiveTransitionSystem) ts).scheduleForAppraisal(args[0].toString(), args[1].toString());
+        
+        // TODO: add a version that sets the source of an emotion
         
         return true;
     }
