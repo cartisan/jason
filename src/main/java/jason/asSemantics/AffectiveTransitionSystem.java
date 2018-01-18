@@ -316,7 +316,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         
         Emotion em = Emotion.getEmotion(emotion);
         
-        if(null != target)
+        if((null != target) & (!target.equals("\"\"")))
             em.setTarget(target);
         if(null != source)
             em.setSource(source);
