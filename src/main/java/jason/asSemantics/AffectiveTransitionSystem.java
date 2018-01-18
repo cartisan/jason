@@ -302,18 +302,25 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     }
     
     public void scheduleForAppraisal(String emotion) throws JasonException {
-        if (!Emotion.getAllEmotions().contains(emotion)) {
-            throw new JasonException(emotion + " is not a valid OCC emotion, check the catalogue in jason.asSemantics.Emotion");
-        }
-        this.deliberative_appraisal.add(Emotion.getEmotion(emotion));
+        this.scheduleForAppraisal(emotion, null, null);
     }
     
     public void scheduleForAppraisal(String emotion, String target) throws JasonException {
+        this.scheduleForAppraisal(emotion, target, null);
+    }
+    
+    public void scheduleForAppraisal(String emotion, String target, String source) throws JasonException {
         if (!Emotion.getAllEmotions().contains(emotion)) {
             throw new JasonException(emotion + " is not a valid OCC emotion, check the catalogue in jason.asSemantics.Emotion");
         }
+        
         Emotion em = Emotion.getEmotion(emotion);
-        em.setTarget(target);
+        
+        if(null != target)
+            em.setTarget(target);
+        if(null != source)
+            em.setSource(source);
+        
         this.deliberative_appraisal.add(em);
     }
     

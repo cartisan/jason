@@ -4,9 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import jason.asSyntax.ASSyntax;
 import jason.asSyntax.Literal;
+import jason.asSyntax.parser.ParseException;
 import javafx.geometry.Point3D;
 
 /**
@@ -21,33 +26,38 @@ import javafx.geometry.Point3D;
  *
  */
 public class Emotion implements Affect {
+    static Logger logger = Logger.getLogger(Emotion.class.getName());
     static public HashMap<String, Supplier<Emotion>> EMOTIONS = new HashMap<>();
     static final String ANNOTATION_FUNCTOR = "emotion";
     
+    static final Pattern basicPattern = Pattern.compile("emotion\\((.+?)\\)(\\[.+\\])?");
+    static final Pattern targetPattern = Pattern.compile("target\\((.+?)\\)");
+    static final Pattern sourcePattern = Pattern.compile("source\\((.+?)\\)");
+    
     /* Choosing an emotion acc. to OCC, decision tree:
      * [valenced reaction to] --- [aspects of objects] ----------------------------------------------------------- love / hate 
-     * 						  |	
-     * 						  --- [actions of agents] ---------- [other agent] ----------------------------------- admiration / reproach
-     * 						  |						  |
-     * 						  |						  ---------- [self agent]  ----------------------------------- pride / shame
-     *						  | 
-     * 						  --- [consequences of events] ----- [conseq. for self] --- [prospects irrelevant] --- joy / distress
-     * 						  |							   |  				        |	
-     * 						  |							   |					    --- [prospects relevant] ----- hope / fear
-     * 						  |							   |						  	         [confirmed] ----- satisfaction / fears-confirmed
-     * 						  |							   |								  [disconfirmed] ----- relief / disappointment
-     * 						  |							   |
-     *  					  |							   ----- [conseq. for others] --- [desirable for oth.] --- happy-for/resentment
-     *  					  |													  	  |
-     *  					  |														  --- [undesirable f. oth.] -- gloating / pity
-     *  					  |
-     *  					  --- [conseq. of agent actions] --- [other agent] ----------------------------------- gratitude /anger
-     *  													 |
-     *  													 --- [self agent] -------------------------------------gratification / remorse
-     */	
+     *                        | 
+     *                        --- [actions of agents] ---------- [other agent] ----------------------------------- admiration / reproach
+     *                        |                       |
+     *                        |                       ---------- [self agent]  ----------------------------------- pride / shame
+     *                        | 
+     *                        --- [consequences of events] ----- [conseq. for self] --- [prospects irrelevant] --- joy / distress
+     *                        |                            |                        |   
+     *                        |                            |                        --- [prospects relevant] ----- hope / fear
+     *                        |                            |                                     [confirmed] ----- satisfaction / fears-confirmed
+     *                        |                            |                                  [disconfirmed] ----- relief / disappointment
+     *                        |                            |
+     *                        |                            ----- [conseq. for others] --- [desirable for oth.] --- happy-for/resentment
+     *                        |                                                       |
+     *                        |                                                       --- [undesirable f. oth.] -- gloating / pity
+     *                        |
+     *                        --- [conseq. of agent actions] --- [other agent] ----------------------------------- gratitude /anger
+     *                                                       |
+     *                                                       --- [self agent] -------------------------------------gratification / remorse
+     */ 
     static {
         EMOTIONS.put("gratification",   () -> new Emotion(0.6, 0.5, 0.4, "gratification"));
-    	EMOTIONS.put("admiration",      () -> new Emotion(0.5, 0.3, -0., "admiration"));
+        EMOTIONS.put("admiration",      () -> new Emotion(0.5, 0.3, -0., "admiration"));
         EMOTIONS.put("pride",           () -> new Emotion(0.4, 0.3, 0.3, "pride"));
         EMOTIONS.put("happy_for",       () -> new Emotion(0.4, 0.2, 0.2, "happy_for"));
         EMOTIONS.put("joy",             () -> new Emotion(0.4, 0.2, 0.1, "joy"));
@@ -56,14 +66,14 @@ public class Emotion implements Affect {
         EMOTIONS.put("satisfaction",    () -> new Emotion(0.3, -0.2, 0.4, "satisfaction"));
         EMOTIONS.put("gloating",        () -> new Emotion(0.3, -0.3, -0.1, "gloating"));
         EMOTIONS.put("hope",            () -> new Emotion(0.2, 0.2, -0.1, "hope"));
-        EMOTIONS.put("relief",		    () -> new Emotion(0.2, -0.3, 0.4, "relief"));
-        EMOTIONS.put("resentment",    	() -> new Emotion(-0.2, -0.3, -0.2, "resentment"));
+        EMOTIONS.put("relief",          () -> new Emotion(0.2, -0.3, 0.4, "relief"));
+        EMOTIONS.put("resentment",      () -> new Emotion(-0.2, -0.3, -0.2, "resentment"));
         EMOTIONS.put("disappointment",  () -> new Emotion(-0.3, 0.1, -0.4, "disappointment"));
-        EMOTIONS.put("remorse",    		() -> new Emotion(-0.3, 0.1, -0.6, "remorse"));
-        EMOTIONS.put("shame",    		() -> new Emotion(-0.3, 0.1, -0.6, "shame"));
-        EMOTIONS.put("reproach",    	() -> new Emotion(-0.3, -0.1, 0.4, "reproach"));
+        EMOTIONS.put("remorse",         () -> new Emotion(-0.3, 0.1, -0.6, "remorse"));
+        EMOTIONS.put("shame",           () -> new Emotion(-0.3, 0.1, -0.6, "shame"));
+        EMOTIONS.put("reproach",        () -> new Emotion(-0.3, -0.1, 0.4, "reproach"));
         EMOTIONS.put("distress",        () -> new Emotion(-0.4, -0.2, -0.5, "distress"));
-        EMOTIONS.put("pity",    		() -> new Emotion(-0.4, -0.2, -0.5, "pity"));
+        EMOTIONS.put("pity",            () -> new Emotion(-0.4, -0.2, -0.5, "pity"));
         EMOTIONS.put("fears_confirmed", () -> new Emotion(-0.5, -0.3, -0.7, "fears_confirmed"));
         EMOTIONS.put("anger",           () -> new Emotion(-0.51, 0.59, 0.25, "anger"));
         EMOTIONS.put("hate",            () -> new Emotion(-0.6, 0.6, 0.3, "hate"));
@@ -74,6 +84,7 @@ public class Emotion implements Affect {
     public final String name;
     public double intensity; // intensity not really supported, it's either there (1) or decayed (0)
     public String target;
+    public String source;
     
     public static Point3D findEmotionCenter(List<Emotion> emotions) {
         /* Functional solution for brevity, time complexity in o(3n)
@@ -92,6 +103,39 @@ public class Emotion implements Affect {
 
     public static Emotion getEmotion(String emotion) {
         return EMOTIONS.get(emotion).get();
+    }
+    
+    /**
+     * Creates an emotion instance from a string representation of an emotion literal.
+     * 
+     * @param s The string representation of an emotion literal
+     * @return an emotion instance if s is a valid representation
+     * @throws ParseException if string s could not be parsed
+     */
+    public static Emotion parseString(String s) throws ParseException{
+        Matcher m = basicPattern.matcher(s);
+        
+        if (m.matches()) {
+            MatchResult res = m.toMatchResult();
+            
+            String emotion = res.group(1);
+            Emotion em = Emotion.getEmotion(emotion);
+            
+            String annotation = res.group(2);
+            if(annotation !=  null) {
+                m = targetPattern.matcher(annotation);
+                if (m.find())
+                    em.setTarget(m.group(1));
+                
+                m = sourcePattern.matcher(annotation);
+                if (m.find())
+                    em.setSource(m.group(1));               
+            }
+            
+            return em;
+        } else {
+            throw new ParseException("String "+ s + " can not be parsed into an emotion");
+        }
     }
     
     public Emotion(double p, double a, double d, String name) {
@@ -133,9 +177,20 @@ public class Emotion implements Affect {
     
     public Literal toLiteral() {
         Literal emLit =  ASSyntax.createLiteral(ANNOTATION_FUNCTOR, ASSyntax.createAtom(this.name));
-        if(this.target != null) {
-            Literal annot = ASSyntax.createLiteral("target",  ASSyntax.createAtom(target));
+        if(this.hasTarget()) {
+            Literal annot = ASSyntax.createLiteral("target",  ASSyntax.createAtom(this.target));
             emLit.addAnnot(annot);
+        }
+        
+        if(this.hasSource()) {
+          try {
+                Literal annot = ASSyntax.createLiteral("source",  ASSyntax.parseLiteral(this.source));
+                emLit.addAnnot(annot);
+          } catch (ParseException e) {
+              logger.warning("Emotion-instance of " + this.name + " malformed, source: " +
+                              this.source + " can not be parsed into literal");
+          }
+            
         }
         return emLit;
     }
@@ -146,5 +201,13 @@ public class Emotion implements Affect {
     
     public boolean hasTarget() {
         return (this.target != null ? true : false);
+    }
+    
+    public void setSource(String source) {
+        this.source = source;
+    }
+    
+    public boolean hasSource() {
+        return (this.source != null ? true : false);
     }
 }
