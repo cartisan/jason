@@ -212,4 +212,8 @@ public class Emotion implements Affect {
     public boolean hasCause() {
         return (this.cause != null ? true : false);
     }
+
+	public String getCause() {
+		return this.cause;
+	}
 }
