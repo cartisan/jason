@@ -30,9 +30,9 @@ public class Emotion implements Affect {
     static public HashMap<String, Supplier<Emotion>> EMOTIONS = new HashMap<>();
     static final String ANNOTATION_FUNCTOR = "emotion";
     
-    static final Pattern basicPattern = Pattern.compile("emotion\\((.+?)\\)(\\[.+\\])?");
-    static final Pattern targetPattern = Pattern.compile("target\\((.+?)\\)");
-    static final Pattern sourcePattern = Pattern.compile("source\\((.+?)\\)");
+    static final Pattern BASE_PATTERN = Pattern.compile("emotion\\((.+?)\\)(\\[.+\\])?");
+    static final Pattern TARGET_PATTERN = Pattern.compile("target\\((.+?)\\)");
+    static final Pattern CAUSE_PATTERN = Pattern.compile("cause\\((.+?)\\)");
     
     /* Choosing an emotion acc. to OCC, decision tree:
      * [valenced reaction to] --- [aspects of objects] ----------------------------------------------------------- love / hate 
@@ -84,7 +84,7 @@ public class Emotion implements Affect {
     public final String name;
     public double intensity; // intensity not really supported, it's either there (1) or decayed (0)
     public String target;
-    public String source;
+    public String cause;
     
     public static Point3D findEmotionCenter(List<Emotion> emotions) {
         /* Functional solution for brevity, time complexity in o(3n)
@@ -113,7 +113,7 @@ public class Emotion implements Affect {
      * @throws ParseException if string s could not be parsed
      */
     public static Emotion parseString(String s) throws ParseException{
-        Matcher m = basicPattern.matcher(s);
+        Matcher m = BASE_PATTERN.matcher(s);
         
         if (m.matches()) {
             MatchResult res = m.toMatchResult();
@@ -123,13 +123,13 @@ public class Emotion implements Affect {
             
             String annotation = res.group(2);
             if(annotation !=  null) {
-                m = targetPattern.matcher(annotation);
+                m = TARGET_PATTERN.matcher(annotation);
                 if (m.find())
                     em.setTarget(m.group(1));
                 
-                m = sourcePattern.matcher(annotation);
+                m = CAUSE_PATTERN.matcher(annotation);
                 if (m.find())
-                    em.setSource(m.group(1));               
+                    em.setCause(m.group(1));               
             }
             
             return em;
@@ -168,7 +168,8 @@ public class Emotion implements Affect {
     
     @Override
     public String toString() {
-        return String.format("(%.2f, %.2f, %.2f)", PAD.getX(), PAD.getY(), PAD.getZ());
+//        return String.format("%s (%.2f, %.2f, %.2f)", getName(), PAD.getX(), PAD.getY(), PAD.getZ());
+        return String.format("%s[cause(%s)](%s)", getName().toUpperCase(), this.cause, (getP()  > 0 ? "+" : "-"));
     }
     
     public String getName() {
@@ -177,18 +178,19 @@ public class Emotion implements Affect {
     
     public Literal toLiteral() {
         Literal emLit =  ASSyntax.createLiteral(ANNOTATION_FUNCTOR, ASSyntax.createAtom(this.name));
+        
         if(this.hasTarget()) {
             Literal annot = ASSyntax.createLiteral("target",  ASSyntax.createAtom(this.target));
             emLit.addAnnot(annot);
         }
         
-        if(this.hasSource()) {
+        if(this.hasCause()) {
           try {
-                Literal annot = ASSyntax.createLiteral("source",  ASSyntax.parseLiteral(this.source));
+                Literal annot = ASSyntax.createLiteral("cause",  ASSyntax.parseLiteral(this.cause));
                 emLit.addAnnot(annot);
           } catch (ParseException e) {
-              logger.warning("Emotion-instance of " + this.name + " malformed, source: " +
-                              this.source + " can not be parsed into literal");
+              logger.warning("Emotion-instance of " + this.name + " malformed, cause: " +
+                              this.cause + " can not be parsed into literal");
           }
             
         }
@@ -203,11 +205,11 @@ public class Emotion implements Affect {
         return (this.target != null ? true : false);
     }
     
-    public void setSource(String source) {
-        this.source = source;
+    public void setCause(String cause) {
+        this.cause = cause;
     }
     
-    public boolean hasSource() {
-        return (this.source != null ? true : false);
+    public boolean hasCause() {
+        return (this.cause != null ? true : false);
     }
 }

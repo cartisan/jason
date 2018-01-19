@@ -108,6 +108,8 @@ public class AffectiveTransitionSystem extends TransitionSystem {
                     if(emotionLit.getArity() == 2)
                         emotion.setTarget(emotionLit.getTerm(1).toString());
                     
+                    emotion.setCause(percept.getFunctor());
+                    
                     this.getAffectiveAg().addEmotion(emotion, "PEM");
                 } catch (ParseException e) {
                     throw new JasonException(e.getMessage());
@@ -319,7 +321,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         if((null != target) & (!target.equals("\"\"")))
             em.setTarget(target);
         if(null != source)
-            em.setSource(source);
+            em.setCause(source);
         
         this.deliberative_appraisal.add(em);
     }
