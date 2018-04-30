@@ -164,6 +164,20 @@ public class Mood implements Serializable, Affect {
         return PAD.getZ();
     }
     
+    /**
+     * Returns this mood's dimension as supplied by the first parameter. Throws RuntimeException if wrong dimension.
+     * @param dimension
+     * @return 
+     */
+    public double get(String dimension) {
+        switch(dimension) {
+        case "pleasure": return this.getP();
+        case "arousal": return this.getA();
+        case "dominance": return this.getD();
+        default: throw new RuntimeException("Attempted to get non-existing dimension: " + dimension);
+        }
+    }
+    
     @Override
     public Mood clone() {
         return new Mood(this.getP(), this.getA(), this.getD());

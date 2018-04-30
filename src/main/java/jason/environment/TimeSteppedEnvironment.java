@@ -51,7 +51,7 @@ public class TimeSteppedEnvironment extends Environment {
     private int  sleep = 0; // pause time between cycles
     
     
-    private OverActionsPolicy overActPol = OverActionsPolicy.ignoreSecond;
+    private OverActionsPolicy overActPol = OverActionsPolicy.failSecond;
     
     public TimeSteppedEnvironment() {
         super(2);
@@ -159,6 +159,8 @@ public class TimeSteppedEnvironment extends Environment {
             // if the agent already has an action scheduled, fail the first
             ActRequest inSchedule = requests.get(agName);
             if (inSchedule != null) {
+                logger.warning("Agent " + agName + " scheduled the additional action '" + action.toString() + "' in an "
+                        + "occupied time step. Policy: " + overActPol.name());
                 if (overActPol == OverActionsPolicy.queue) {
                     overRequests.offer(newRequest);
                 } else if (overActPol == OverActionsPolicy.failSecond) {

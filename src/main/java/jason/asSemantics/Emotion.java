@@ -28,7 +28,7 @@ import javafx.geometry.Point3D;
 public class Emotion implements Affect {
     static Logger logger = Logger.getLogger(Emotion.class.getName());
     static public HashMap<String, Supplier<Emotion>> EMOTIONS = new HashMap<>();
-    static final String ANNOTATION_FUNCTOR = "emotion";
+    static public final String ANNOTATION_FUNCTOR = "emotion";
     
     static final Pattern BASE_PATTERN = Pattern.compile("emotion\\((.+?)\\)(\\[.+\\])?");
     static final Pattern TARGET_PATTERN = Pattern.compile("target\\((.+?)\\)");
@@ -137,7 +137,7 @@ public class Emotion implements Affect {
             throw new ParseException("String "+ s + " can not be parsed into an emotion");
         }
     }
-    
+
     public Emotion(double p, double a, double d, String name) {
         this.PAD = new Point3D(p, a, d);
         this.name= name;
@@ -213,7 +213,7 @@ public class Emotion implements Affect {
         return (this.cause != null ? true : false);
     }
 
-	public String getCause() {
-		return this.cause;
-	}
+    public String getCause() {
+        return this.cause;
+    }
 }
