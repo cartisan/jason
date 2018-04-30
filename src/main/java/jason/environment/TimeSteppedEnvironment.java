@@ -57,6 +57,12 @@ public class TimeSteppedEnvironment extends Environment {
         super(2);
     }
     
+    /**
+     * Resets and step counter and scheduled action requests to neutral state, optionally sets a timeout for waiting
+     * on agent actions in a step.
+     * 
+     * @param args either empty, or contains timeout in milliseconds at pos 0
+     */
     @Override
     public void init(String[] args) {
         super.init(args);
@@ -77,6 +83,7 @@ public class TimeSteppedEnvironment extends Environment {
             if (stepTimeout > 0) {
                 timeoutThread = new TimeOutThread(stepTimeout);
                 timeoutThread.start();
+                logger.info("Started timeout thread with timeout (in ms): " + String.valueOf(stepTimeout));
             }
         } else {
             timeoutThread.allAgFinished();
