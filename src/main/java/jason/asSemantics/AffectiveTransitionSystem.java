@@ -15,7 +15,11 @@ import jason.asSyntax.parser.ParseException;
 import jason.runtime.Settings;
 
 public class AffectiveTransitionSystem extends TransitionSystem {
-    private String originalStepDeliberate = "";
+	
+	
+    public enum AffectState { DerivePEM, DeriveSEM, UpMood }
+	
+	private String originalStepDeliberate = "";
     
     /**
      * Contains emotion names of emotions appraised during ASL reasoning.
