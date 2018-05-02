@@ -33,9 +33,9 @@ public class Circumstance implements Serializable {
     protected Option                   SO;
     protected Intention                SI;
     private   Intention                AI; // Atomic Intention
-    protected   Event                    AE; // Atomic Event
-    protected   boolean                  atomicIntSuspended = false; // whether the current atomic intention is suspended in PA or PI
-    //private   boolean                  hasAtomicEvent = false;         
+    protected Event                    AE; // Atomic Event
+    protected boolean                  atomicIntSuspended = false; // whether the current atomic intention is suspended in PA or PI
+    //private   boolean                  hasAtomicEvent = false;
 
     protected Map<Integer, ActionExec>   PA; // Pending actions, waiting action execution (key is the intention id)
     protected List<ActionExec>           FA; // Feedback actions, those that are already executed

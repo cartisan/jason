@@ -2,7 +2,7 @@
 
 <xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-    
+
     <xsl:param name="h-style"  select="'color: red; font-family: arial;'" />
     <xsl:param name="th-style" select="'text-align: left; vertical-align: top;  color: #330099;'" />
     <xsl:param name="th-style2" select="'text-align: left; color: blue;'" />
@@ -11,7 +11,7 @@
     <xsl:param name="trh-style" select="'font-family: arial; vertical-align: top;'" />
     <xsl:param name="tr-style" select="'background-color: #ece7e6; font-family: arial;'" />
     <!-- border-top: 2px solid black;  -->
-	
+
     <xsl:param name="bc"     select="'rgb(0 ,170, 0)'" />
     <xsl:param name="tec"    select="'rgb(200, 0, 0)'" />
     <xsl:param name="ac"     select="'rgb(80, 40, 20)'" />
@@ -20,7 +20,7 @@
     <xsl:param name="iac"    select="'rgb(100, 70, 30)'" />
     <xsl:param name="var"    select="'rgb(0, 0, 200)'" />
     <xsl:param name="string" select="'rgb(0, 0, 250)'" />
-    
+
     <xsl:param name="show-bels"    select="'true'" />
     <xsl:param name="show-affect"  select="'true'" />
     <xsl:param name="show-annots"  select="'true'" />
@@ -31,21 +31,21 @@
     <xsl:param name="show-int"     select="'true'" />
     <xsl:param name="show-plan-details"   select="'true'" />
     <xsl:param name="show-int-details"    select="'true'" />
-    
+
     <xsl:output method="html" />
     <xsl:strip-space elements="*" />
-    
+
     <xsl:template match="agent">
         <html>
             <span style="{$h-style}"><font size="+2">
-                    Inspection of agent <b><xsl:value-of select="@name"/></b> 
+                    Inspection of agent <b><xsl:value-of select="@name"/></b>
                     <xsl:if test="@cycle != 0">
                         (cycle #<xsl:value-of select="@cycle"/>)
                     </xsl:if>
             </font></span>
-            
+
             <table border="0" cellspacing="3" cellpadding="6" >
-                
+
                 <xsl:apply-templates select="beliefs" />
                 <xsl:apply-templates select="circumstance/affect" />
                 <xsl:apply-templates select="circumstance/mailbox" />
@@ -53,7 +53,7 @@
                 <xsl:apply-templates select="circumstance/options" />
                 <xsl:apply-templates select="circumstance/intentions" />
                 <xsl:apply-templates select="circumstance/actions" />
-                
+
                 <!-- xsl:apply-templates select="plans" /-->
                 <tr style="{$trh-style}">
 	                <xsl:call-template name="hideshow">
@@ -66,13 +66,13 @@
             </table>
         </html>
     </xsl:template>
-    
+
     <!-- create de +/- buttom -->
     <xsl:template name="hideshow">
         <xsl:param name="show" select="'false'" />
         <xsl:param name="item" select="'none'" />
         <xsl:param name="ds"   select="'none'" />
-        <xsl:if test="$show='true'">       
+        <xsl:if test="$show='true'">
             <th valign="top" style="{$th-style}">
                 <hr/>
                 <a href="hide?{$item}" style="text-decoration: none">
@@ -92,9 +92,9 @@
                 <xsl:value-of select="$ds" />
             </th>
             <td style="{$td-style}"></td>
-        </xsl:if> 
+        </xsl:if>
     </xsl:template>
-    
+
     <xsl:template match="beliefs">
         <xsl:if test="count(literal) > 0" >
             <tr style="{$trh-style}">
@@ -110,11 +110,11 @@
 			                    <xsl:for-each select="namespaces/namespace">
     		                        <xsl:variable name="nsId" select="@id" />
 		                            <xsl:for-each select="../../literal[@namespace=$nsId]">
-		                                <xsl:sort select="structure/@functor" />
+		                                <!-- xsl:sort select="structure/@functor" / -->
 		                                <tr style="{$trh-style}">
 		                                    <td style="text-align: left">
-			                                    <xsl:if test="$nsId != 'default' and position()=1">
-			                                       <br/><b><xsl:value-of select="$nsId" /><xsl:text>::</xsl:text></b> <br/>
+			                                    <xsl:if test="@namespace != 'default' and position()=1">
+			                                       <br/><b><xsl:value-of select="@namespace" /><xsl:text>::</xsl:text></b> <br/>
 			                                    </xsl:if>
 		                                        <span style="color: {$bc}">
 		                                            <xsl:apply-templates select="." />
@@ -129,7 +129,7 @@
                 </xsl:if>
             </tr>
         </xsl:if>
-        
+
         <!-- Rules -->
         <xsl:if test="count(rule) > 0" >
             <tr style="{$trh-style}">
@@ -198,7 +198,7 @@
             </td>            
         </tr>
     </xsl:template>
-    
+
     <xsl:template match="mailbox">
         <tr style="{$trh-style}">
             <xsl:call-template name="hideshow">
@@ -215,8 +215,8 @@
             </xsl:if>
         </tr>
     </xsl:template>
-    
-    
+
+
     <xsl:template match="message">
         <tr style="{$trh-style}">
             <td style="text-align: left">
@@ -224,7 +224,7 @@
             </td>
         </tr>
     </xsl:template>
-    
+
     <xsl:template match="events">
         <tr style="{$trh-style}">
             <xsl:call-template name="hideshow">
@@ -246,7 +246,7 @@
             </xsl:if>
         </tr>
     </xsl:template>
-    
+
     <xsl:template match="event">
         <tr style="{$trh-style}">
             <td valign="top" style="{$td-style2}">
@@ -255,7 +255,7 @@
                 </xsl:if>
                 <xsl:value-of select="@pending" />
             </td>
-            
+
             <td valign="top" style="{$td-style}">
                 <span style="color: {$tec}">
                     <xsl:apply-templates />
@@ -266,7 +266,7 @@
             </td>
         </tr>
     </xsl:template>
-    
+
     <xsl:template match="intentions">
         <tr style="{$trh-style}">
             <xsl:call-template name="hideshow">
@@ -282,7 +282,7 @@
                             <th valign="top" style="{$th-style2}">Id</th>
                             <th valign="top" style="{$th-style2}">Pen</th>
                             <th valign="top" style="{$th-style2}">Intended Means Stack
-                                <xsl:if test="$show-int-details='true'">                                    
+                                <xsl:if test="$show-int-details='true'">
                                     <a href="hide?int-details" style="text-decoration: none">
                                         <xsl:text>(hide details)</xsl:text>
                                     </a>
@@ -291,7 +291,7 @@
                                     <a href="show?int-details" style="text-decoration: none">
                                         <xsl:text>(show details)</xsl:text>
                                     </a>
-                                </xsl:if>                            
+                                </xsl:if>
                             </th>
                         </tr>
                         <xsl:apply-templates />
@@ -300,7 +300,7 @@
             </xsl:if>
         </tr>
     </xsl:template>
-    
+
     <xsl:template match="intention">
         <tr style="{$trh-style}">
             <td valign="top" style="{$td-style2}">
@@ -308,11 +308,11 @@
                     <b>X</b>
                 </xsl:if>
             </td>
-            
+
             <td valign="top" style="{$td-style2}">
                 <xsl:value-of select="@id" />
             </td>
-            
+
             <td valign="top" style="{$td-style2}">
                 <xsl:if test="string-length(@pending) > 0">
                     <b><xsl:value-of select="@pending" /></b>
@@ -321,7 +321,7 @@
                     <xsl:text> (suspended) </xsl:text>
                 </xsl:if>
             </td>
-            
+
             <td valign="top">
                 <table cellspacing="0" cellpadding="2">
                     <xsl:apply-templates />
@@ -339,12 +339,12 @@
 	        <xsl:apply-templates select="@trigger"/>
             <xsl:if test="$show-int-details='true'">
                 <!-- td valign="top" style="{$td-style}" -->
-                <br/>                
+                <br/>
                 <pre>     &lt;- ... <xsl:apply-templates select="body"/> </pre>
                 <!-- /td -->
             </xsl:if>
             </td>
-            
+
             <xsl:if test="$show-int-details='true'">
                 <td valign="top" style="{$td-style}">
                     <br/>
@@ -353,8 +353,8 @@
             </xsl:if>
         </tr>
     </xsl:template>
-    
-    
+
+
     <xsl:template match="actions">
         <tr style="{$trh-style}">
             <th valign="top" style="{$th-style}"><hr/>
@@ -374,30 +374,30 @@
             </td>
         </tr>
     </xsl:template>
-    
+
     <xsl:template match="action">
         <tr style="{$trh-style}">
-            
+
             <td valign="top" style="{$td-style2}">
                 <xsl:if test="@pending='true'">
                     X
                 </xsl:if>
             </td>
-            
+
             <td valign="top" style="{$td-style2}">
                 <xsl:if test="@feedback='true'">
                     X
                 </xsl:if>
             </td>
-            
+
             <td valign="top" style="{$td-style2}">
                 <xsl:if test="@selected='true'">
                     <b>X</b>
                 </xsl:if>
             </td>
-            
+
             <td valign="top" style="{$td-style}">
-                <xsl:value-of select="@term" /> 
+                <xsl:value-of select="@term" />
             </td>
             <td valign="top" style="{$td-style2}">
                 <xsl:value-of select="@result" />
@@ -407,7 +407,7 @@
             </td>
         </tr>
     </xsl:template>
-    
+
     <xsl:template match="options">
         <tr style="{$trh-style}">
             <xsl:call-template name="hideshow">
@@ -432,7 +432,7 @@
                                     <a href="show?plan-details" style="text-decoration: none">
                                         <xsl:text>(show details)</xsl:text>
                                     </a>
-                                </xsl:if>                            
+                                </xsl:if>
                             </th>
                             <th valign="top" style="{$th-style2}">Unifier</th>
                         </tr>
@@ -442,36 +442,36 @@
             </xsl:if>
         </tr>
     </xsl:template>
-    
+
     <xsl:template match="option">
         <tr style="{$trh-style}">
-            
+
             <td valign="top" style="{$td-style2}">
                 <xsl:if test="@applicable='true'">
                     X
                 </xsl:if>
             </td>
-            
+
             <td valign="top" style="{$td-style2}">
                 <xsl:if test="@selected='true'">
                     <b>X</b>
                 </xsl:if>
             </td>
-            
+
             <td valign="top" style="{$td-style}">
                 <xsl:if test="$show-plan-details='true'">
                     <xsl:apply-templates select="plan"/>
                 </xsl:if>
                 <xsl:if test="$show-plan-details='false'">
                     <xsl:apply-templates select="plan/trigger"/>
-                </xsl:if>                            
+                </xsl:if>
             </td>
             <td valign="top" style="{$td-style}">
                 <xsl:apply-templates select="unifier"/>
             </td>
         </tr>
     </xsl:template>
-    
+
     <xsl:template match="unifier">
         <xsl:if test="count(map) > 0">
             {
@@ -484,28 +484,28 @@
             }
         </xsl:if>
     </xsl:template>
-    
+
     <xsl:template match="plan">
         <xsl:if test="count(label) > 0 and not(starts-with(label/literal/structure/@functor,'l__'))">
             <span style="color: rgb(51, 51, 51);">
                 @<xsl:apply-templates select="label" />
             </span><br/>
         </xsl:if>
-        
+
         <span style="color: {$tec};">
             <b><xsl:apply-templates select="trigger" /></b>
         </span>
-        
+
         <xsl:if test="count(context) > 0">
             <table>
                 <tr>
                     <td width="20" />
                     <td width="20" style="vertical-align: top"><b>:</b></td>
-                    <td><xsl:apply-templates select="context" /></td> 
+                    <td><xsl:apply-templates select="context" /></td>
                 </tr>
             </table>
         </xsl:if>
-        
+
         <xsl:if test="count(body/body-literal) > 0">
             <table>
                 <tr>
@@ -521,8 +521,8 @@
         </xsl:if>
         <xsl:text>.</xsl:text>
     </xsl:template>
-    
-    
+
+
     <xsl:template match="context">
         <span style="color: {$bc}">
             <xsl:apply-templates />
@@ -538,7 +538,7 @@
         <xsl:apply-templates select="right" />
         <span style="color: black">)</span>
     </xsl:template>
-    
+
     <xsl:template match="body">
         <xsl:param name="in-plan" select="'false'" />
         <xsl:for-each select="body-literal">
@@ -560,26 +560,26 @@
                 </xsl:when>
                 <xsl:otherwise>
                     <xsl:value-of select="@type"/><xsl:apply-templates />
-                </xsl:otherwise>        		
+                </xsl:otherwise>
             </xsl:choose>
             <xsl:if test="not(position()=last())">; </xsl:if>
         </xsl:for-each>
     </xsl:template>
-    
-    
+
+
     <xsl:template match="trigger">
         <xsl:value-of select="@operator"/>
         <xsl:value-of select="@type"/>
         <xsl:apply-templates />
     </xsl:template>
-    
+
     <xsl:template match="rule">
         <xsl:apply-templates select="head"/>
         <font color="black"><b><xsl:text> :- </xsl:text></b></font>
         <table>
             <tr>
                 <td width="20" />
-                <td><xsl:apply-templates select="context" />.</td> 
+                <td><xsl:apply-templates select="context" />.</td>
             </tr>
         </table>
     </xsl:template>
@@ -593,7 +593,7 @@
         </xsl:if>
         <xsl:apply-templates  />
     </xsl:template>
-    
+
     <xsl:template match="structure">
         <xsl:value-of select="@functor"/>
         <xsl:if test="count(arguments) > 0">
@@ -615,7 +615,7 @@
                 <sub>
                     <xsl:apply-templates />
                 </sub>
-            </span>            
+            </span>
         </xsl:if>
         <xsl:if test="$show-annots='false'">
             <xsl:if test="count(list-term) > 0">
@@ -624,12 +624,12 @@
                     <a href="show?annots" style="text-decoration: none">
                     <xsl:text>[...]</xsl:text>
                     </a>
-                    </span>                
-                </sub>                
+                    </span>
+                </sub>
             </xsl:if>
         </xsl:if>
     </xsl:template>
-    
+
     <xsl:template match="var-term">
         <span style="color: {$var}">
             <xsl:value-of select="@functor"/>
@@ -638,7 +638,7 @@
             </xsl:if>
         </span>
     </xsl:template>
-    
+
     <xsl:template match="number-term">
         <i><xsl:value-of select="text()"/></i>
     </xsl:template>
@@ -656,4 +656,4 @@
         <xsl:text>]</xsl:text>
     </xsl:template>
 
-</xsl:stylesheet> 
+</xsl:stylesheet>

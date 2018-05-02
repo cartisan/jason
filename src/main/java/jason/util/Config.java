@@ -20,7 +20,7 @@ import jason.infra.jade.JadeFactory;
 
 /**
  * Jason configuration (used by JasonID to generate the project's scripts)
- * 
+ *
  * @author jomi
  */
 public class Config extends Properties {
@@ -29,7 +29,7 @@ public class Config extends Properties {
 
     /** path to jason.jar */
     public static final String JASON_JAR     = "jasonJar";
-    
+
     /** path to ant home (jar directory) */
     public static final String ANT_LIB       = "antLib";
 
@@ -37,10 +37,10 @@ public class Config extends Properties {
     public static final String JADE_JAR      = "jadeJar";
     //public static final String MOISE_JAR     = "moiseJar";
     //public static final String JACAMO_JAR    = "jacamoJar";
-    
+
     /** runtime jade arguments (the same used in jade.Boot) */
     public static final String JADE_ARGS     = "jadeArgs";
-    
+
     /** boolean, whether to start jade RMA or not */
     public static final String JADE_RMA      = "jadeRMA";
 
@@ -49,7 +49,7 @@ public class Config extends Properties {
 
     /** path to java home */
     public static final String JAVA_HOME     = "javaHome";
-    
+
     public static final String RUN_AS_THREAD = "runCentralisedInsideJIDE";
     public static final String SHELL_CMD     = "shellCommand";
     public static final String CLOSEALL      = "closeAllBeforeOpenMAS2J";
@@ -57,15 +57,15 @@ public class Config extends Properties {
     public static final String WARN_SING_VAR = "warnSingletonVars";
 
     public static final String SHOW_ANNOTS   = "showAnnots";
-    
-    
+
+
     //public static final String jacamoHomeProp = "JaCaMoHome";
 
     public static final String SHORT_UNNAMED_VARS = "shortUnnamedVars";
     public static final String START_WEB_MI       = "startWebMindInspector";
     public static final String START_WEB_EI       = "startWebEnvInspector";
     public static final String START_WEB_OI       = "startWebOrgInspector";
-    
+
     public static final String NB_TH_SCH      = "numberOfThreadsForScheduler";
 
     public static final String KQML_RECEIVED_FUNCTOR   = "kqmlReceivedFunctor";
@@ -74,12 +74,14 @@ public class Config extends Properties {
     protected static Config    singleton     = null;
 
     protected static String    configFactory = null;
+
+    protected static boolean   showFixMsgs = true;
     
     public static void setClassFactory(String f) {
         singleton = null;
         configFactory = f;
     }
-    
+
     public static Config get() {
         // return get(true);
         return get(false);
@@ -103,23 +105,27 @@ public class Config extends Properties {
         }
         return singleton;
     }
-    
+
     protected Config() {
     }
 
+    public void setShowFixMsgs(boolean b) {
+        showFixMsgs = b;        
+    }
+    
     /** returns the file where the user preferences are stored */
     public File getUserConfFile() {
         return new File(System.getProperties().get("user.home") + File.separator + ".jason/user.properties");
     }
-    
+
     public File getMasterConfFile() {
         return new File("jason.properties");
     }
-    
+
     public String getFileConfComment() {
         return "Jason user configuration";
     }
-    
+
     /** Returns true if the file is loaded correctly */
     public boolean load() {
         try {
@@ -150,7 +156,7 @@ public class Config extends Properties {
     public String getJasonJar() {
         return getProperty(JASON_JAR);
     }
-    
+
     /** returns the jason home (based on jason.jar) */
     public String getJasonHome() {
         try {
@@ -168,7 +174,8 @@ public class Config extends Properties {
 
     /** Return the jade args (those used in jade.Boot) */
     public String getJadeArgs() {
-        return getProperty(JADE_ARGS);
+        String a = getProperty(JADE_ARGS);
+        return a == null ? "" : a;
     }
 
     public String[] getJadeArrayArgs() {
@@ -187,7 +194,7 @@ public class Config extends Properties {
         return as;
     }
 
-    /** Returns the path to the java  home directory */    
+    /** Returns the path to the java  home directory */
     public String getJavaHome() {
         String h = getProperty(JAVA_HOME);
         if (! h.endsWith(File.separator))
@@ -195,11 +202,11 @@ public class Config extends Properties {
         return h;
     }
 
-    /** Returns the path to the ant home directory (where its jars are stored) */    
+    /** Returns the path to the ant home directory (where its jars are stored) */
     public String getAntLib() {
         return getProperty(ANT_LIB);
     }
-    
+
     public String getAntJar() {
         String ant = getAntLib();
         if (ant != null) {
@@ -210,10 +217,10 @@ public class Config extends Properties {
                     return fAnt.getName();
             }
         }
-        
+
         return null;
     }
-    
+
     public void setJavaHome(String jh) {
         if (jh != null) {
             jh = new File(jh).getAbsolutePath();
@@ -237,12 +244,12 @@ public class Config extends Properties {
     public String getShellCommand() {
         return getProperty(SHELL_CMD);
     }
-    
+
     public String getKqmlFunctor() {
         return getProperty(KQML_RECEIVED_FUNCTOR, Message.kqmlReceivedFunctor);
     }
     public String getKqmlPlansFile() {
-        return getProperty(KQML_PLANS_FILE, Message.kqmlDefaultPlans); 
+        return getProperty(KQML_PLANS_FILE, Message.kqmlDefaultPlans);
     }
 
     public void resetSomeProps() {
@@ -257,7 +264,7 @@ public class Config extends Properties {
         put(Config.SHOW_ANNOTS, "false");
     }
 
-    
+
     /** Set most important parameters with default values */
     public void fix() {
         tryToFixJarFileConf(JASON_JAR,  "jason",  700000);
@@ -265,7 +272,7 @@ public class Config extends Properties {
         //tryToFixJarFileConf(MOISE_JAR,  "moise",  300000);
         //tryToFixJarFileConf(JACAMO_JAR, "jacamo",   5000);
         tryToFixJarFileConf(JASON_JAR,  "jason",  700000); // in case jacamo is found
-        
+
         // fix java home
         if (get(JAVA_HOME) == null || !checkJavaHomePath(getProperty(JAVA_HOME))) {
             String javaHome = System.getProperty("java.home");
@@ -279,7 +286,7 @@ public class Config extends Properties {
                     String javaHomeUp = javaHome + File.separator + "..";
                     if (checkJavaHomePath(javaHomeUp)) {
                         setJavaHome(javaHomeUp);
-                    } else {                
+                    } else {
                         // try JRE
                         if (checkJREHomePath(javaHome)) {
                             setJavaHome(javaHome);
@@ -354,23 +361,23 @@ public class Config extends Properties {
         if (getProperty(SHOW_ANNOTS) == null) {
             put(SHOW_ANNOTS, "true");
         }
-        
+
         if (getProperty(START_WEB_MI) == null) {
             put(START_WEB_MI, "true");
         }
-        
+
         if (getProperty(NB_TH_SCH) == null) {
             put(NB_TH_SCH, "2");
         }
-        
+
         if (getProperty(SHORT_UNNAMED_VARS) == null) {
             put(SHORT_UNNAMED_VARS,"true");
         }
-        
+
         if (getProperty(KQML_RECEIVED_FUNCTOR) == null) {
             put(KQML_RECEIVED_FUNCTOR, Message.kqmlReceivedFunctor);
         }
-        
+
         if (getProperty(KQML_PLANS_FILE) == null) {
             put(KQML_PLANS_FILE, Message.kqmlDefaultPlans);
         }
@@ -378,11 +385,11 @@ public class Config extends Properties {
         // Default infrastructures
         setDefaultInfra();
     }
-    
+
     private void setDefaultInfra() {
         put("infrastructure.Centralised", CentralisedFactory.class.getName());
         put("infrastructure.Jade", JadeFactory.class.getName());
-        //put("infrastructure.JaCaMo", "jacamo.infra.JaCaMoInfrastructureFactory");     
+        //put("infrastructure.JaCaMo", "jacamo.infra.JaCaMoInfrastructureFactory");
     }
 
     public void store() {
@@ -425,11 +432,11 @@ public class Config extends Properties {
                 return r;
             }
         } catch (Exception e) {
-            System.err.println("Error getting user infrastructures.");          
+            System.err.println("Error getting user infrastructures.");
         }
         return new String[] {"Centralised","Jade" }; //,"JaCaMo"};
     }
-    
+
     public String getInfrastructureFactoryClass(String infraId) {
         Object oClass = get("infrastructure." + infraId);
         if (oClass == null) {
@@ -446,11 +453,11 @@ public class Config extends Properties {
         remove("infrastructure." + infraId);
     }
 
-    
+
     /*public String getDistPropFile() {
         return "/dist.properties";
     }*/
-    
+
     public String getJasonVersion() {
         Package j = Package.getPackage("jason.util");
         if (j != null) {
@@ -465,7 +472,7 @@ public class Config extends Properties {
             if (v == null)
                 v = "";
             else if (! v.isEmpty())
-                v = v + ".";                
+                v = v + ".";
             return  v + p.getProperty("release");
         } catch (Exception ex1) {
             try {
@@ -479,7 +486,7 @@ public class Config extends Properties {
                 return "?";
             }
         }*/
-        
+
     }
 
     public String getJasonBuiltDate() {
@@ -497,26 +504,29 @@ public class Config extends Properties {
             return "?";
         }*/
     }
-    
+
     public void tryToFixJarFileConf(String jarEntry, String jarFilePrefix, int minSize) {
         String jarFile = getProperty(jarEntry);
         if (jarFile == null || !checkJar(jarFile, minSize)) {
-            System.out.println("Wrong configuration for " + jarFilePrefix + ", current is " + jarFile);
+            if (showFixMsgs)
+                System.out.println("Wrong configuration for " + jarFilePrefix + ", current is " + jarFile);
 
             // try eclipse installation
             jarFile = getJarFromEclipseInstallation(jarFilePrefix);
             if (checkJar(jarFile, minSize)) {
                 put(jarEntry, jarFile);
-                System.out.println("found at " + jarFile+" in eclipse installation");
+                if (showFixMsgs)
+                    System.out.println("found at " + jarFile+" in eclipse installation");
                 return;
             }
-            
+
             // try current dir
             jarFile = findJarInDirectory(new File("."), jarFilePrefix);
             if (checkJar(jarFile, minSize)) {
                 try {
                     put(jarEntry, new File(jarFile).getCanonicalFile().getAbsolutePath());
-                    System.out.println("found at " + jarFile);
+                    if (showFixMsgs)
+                        System.out.println("found at " + jarFile);
                     return;
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -527,17 +537,19 @@ public class Config extends Properties {
             jarFile = getJarFromClassPath(jarFilePrefix);
             if (checkJar(jarFile, minSize)) {
                 put(jarEntry, jarFile);
-                System.out.println("found at " + jarFile+" by classpath");
+                if (showFixMsgs)
+                    System.out.println("found at " + jarFile+" by classpath");
                 return;
             }
-            
+
             try {
                 // try jason jar
                 File jasonjardir = new File(getJasonJar()).getAbsoluteFile().getCanonicalFile().getParentFile();
                 jarFile = findJarInDirectory(jasonjardir, jarFilePrefix);
                 if (checkJar(jarFile, minSize)) {
                     put(jarEntry, jarFile);
-                    System.out.println("found at " + jarFile+" by jason.jar directory");
+                    if (showFixMsgs)
+                        System.out.println("found at " + jarFile+" by jason.jar directory");
                     return;
                 }
             } catch (Exception e) {}
@@ -554,13 +566,14 @@ public class Config extends Properties {
                 }
             } catch (Exception e) {}
             */
-            
+
             // try current dir + lib
             jarFile = findJarInDirectory(new File(".." + File.separator + "libs"), jarFilePrefix);
             if (checkJar(jarFile, minSize)) {
                 try {
                     put(jarEntry, new File(jarFile).getCanonicalFile().getAbsolutePath());
-                    System.out.println("found at " + jarFile);
+                    if (showFixMsgs)
+                        System.out.println("found at " + jarFile);
                     return;
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -570,7 +583,8 @@ public class Config extends Properties {
             if (checkJar(jarFile, minSize)) {
                 try {
                     put(jarEntry, new File(jarFile).getCanonicalFile().getAbsolutePath());
-                    System.out.println("found at " + jarFile);
+                    if (showFixMsgs)
+                        System.out.println("found at " + jarFile);
                     return;
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -582,7 +596,8 @@ public class Config extends Properties {
             if (checkJar(jarFile, minSize)) {
                 try {
                     put(jarEntry, new File(jarFile).getCanonicalFile().getAbsolutePath());
-                    System.out.println("found at " + jarFile);
+                    if (showFixMsgs)
+                        System.out.println("found at " + jarFile);
                     return;
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -601,16 +616,19 @@ public class Config extends Properties {
             }
             if (jwsDir != null) {
                 jarFile = findFile(new File(jwsDir), jarFilePrefix, minSize);
-                System.out.print("Searching " + jarFilePrefix + " in " + jwsDir + " ... ");
+                if (showFixMsgs)
+                    System.out.print("Searching " + jarFilePrefix + " in " + jwsDir + " ... ");
                 if (jarFile != null && checkJar(jarFile)) {
-                    System.out.println("found at " + jarFile);
+                    if (showFixMsgs)
+                        System.out.println("found at " + jarFile);
                     put(jarEntry, jarFile);
                     return;
                 } else {
                     put(jarEntry, File.separator);
                 }
             }
-            System.out.println(jarFilePrefix+" not found");
+            if (showFixMsgs)
+                System.out.println(jarFilePrefix+" not found");
         }
 
     }
@@ -633,11 +651,11 @@ public class Config extends Properties {
         }
         return null;
     }
-    
+
     public static String findJarInDirectory(File dir, String prefix) {
         if (dir.isDirectory()) {
             for (File f: dir.listFiles()) {
-                if (f.getName().startsWith(prefix) && f.getName().endsWith(".jar") && !f.getName().endsWith("-sources.jar") && !f.getName().endsWith("-javadoc.jar")) {                 
+                if (f.getName().startsWith(prefix) && f.getName().endsWith(".jar") && !f.getName().endsWith("-sources.jar") && !f.getName().endsWith("-javadoc.jar")) {
                     return f.getAbsolutePath();
                 }
             }
@@ -706,7 +724,7 @@ public class Config extends Properties {
     public static boolean isWindows() {
         return System.getProperty("os.name").startsWith("Windows");
     }
-    
+
     static private String getJarFromClassPath(String file) {
         StringTokenizer st = new StringTokenizer(System.getProperty("java.class.path"), File.pathSeparator);
         while (st.hasMoreTokens()) {
@@ -722,34 +740,34 @@ public class Config extends Properties {
     protected String getEclipseInstallationDirectory() {
         return "jason";
     }
-    
+
     private String getJarFromEclipseInstallation(String file) {
         String eclipse = System.getProperty("eclipse.launcher");
         //eclipse = "/Applications/eclipse/eclipse";
         if (eclipse != null) {
             File f = (new File(eclipse)).getParentFile().getParentFile();
-            if (eclipse.contains("Eclipse.app/Contents")) // MacOs case 
-                f = f.getParentFile().getParentFile(); 
+            if (eclipse.contains("Eclipse.app/Contents")) // MacOs case
+                f = f.getParentFile().getParentFile();
             return findJarInDirectory(new File(f+"/"+getEclipseInstallationDirectory()+"/libs"), file);
         }
         return null;
     }
-    
+
     public String getTemplate(String templateName) {
         try {
             if (templateName.equals("agent.asl"))
                 templateName = "agent";
             if (templateName.equals("project.mas2j"))
                 templateName = "project";
-            
+
             String nl = System.getProperty("line.separator");
             // get template
             BufferedReader in;
-            
+
             // if there is jason/src/xml/build-template.xml, use it; otherwise use the file in jason.jar
             File bt = new File("src/templates/"+templateName);
             if (bt.exists()) {
-                in = new BufferedReader(new FileReader(bt));                
+                in = new BufferedReader(new FileReader(bt));
             } else {
                 bt = new File("../src/templates/"+templateName);
                 if (bt.exists()) {
@@ -768,7 +786,7 @@ public class Config extends Properties {
                     }
                 }
             }
-            
+
             StringBuilder scriptBuf = new StringBuilder();
             String line = in.readLine();
             while (line != null) {
@@ -782,25 +800,32 @@ public class Config extends Properties {
             return null;
         }
     }
-    
+
     protected String getHome() {
         return getJasonHome();
     }
-    
+
     public InputStream getDetaultResource(String templateName) throws IOException {
         return TransitionSystem.class.getResource("/templates/"+templateName).openStream();
     }
-    
-    public static void main(String[] args) { 
+
+    public static void main(String[] args) {
         Config.get().fix();
         Config.get().store();
     }
-    
+
     public String getMindInspectorArchClassName() {
         return "jason.architecture.MindInspectorAgArch";
     }
-    
+
     public String getMindInspectorWebServerClassName() {
         return "jason.architecture.MindInspectorWebImpl";
     }
+    
+    public String getPresentation() {
+        return "Jason "+getJasonVersion()+"\n"+
+               "     built on "+getJasonBuiltDate()+"\n"+
+               "     installed at "+getHome();
+    }
+
 }

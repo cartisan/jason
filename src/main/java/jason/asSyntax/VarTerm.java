@@ -21,11 +21,11 @@ import org.w3c.dom.Element;
  * Represents a variable Term: like X (starts with upper case). It may have a
  * value, after {@link VarTerm}.apply.
  *
- * An object of this class can be used in place of a 
- * Literal, Number, List, String, .... It behaves like a 
- * Literal, Number, .... just in case its value is a Literal, 
+ * An object of this class can be used in place of a
+ * Literal, Number, List, String, .... It behaves like a
+ * Literal, Number, .... just in case its value is a Literal,
  * Number, ...
- * 
+ *
  * @author jomi
  */
 public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, StringTerm, ObjectTerm, PlanBody {
@@ -43,15 +43,15 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
             e.printStackTrace();
         }
     }
-    
+
     public VarTerm(Atom namespace, String functor) {
-        super(namespace, LPos, functor);      
+        super(namespace, LPos, functor);
     }
 
     public VarTerm(Atom namespace, Literal v) {
         super(namespace, !v.negated(), v);
     }
-    
+
     /** @deprecated prefer ASSyntax.parseVar(...) */
     public static VarTerm parseVar(String sVar) {
         as2j parser = new as2j(new StringReader(sVar));
@@ -62,19 +62,19 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
             return null;
         }
     }
-    
+
     @Override
     public Term capply(Unifier u) {
-        if (u != null) { 
+        if (u != null) {
             Term vl = u.get(this);
             if (vl != null) {
                 if (!vl.isCyclicTerm() && vl.hasVar(this, u)) {
                     //logger.warning("The value of a variable contains itself, variable "+super.getFunctor()+" "+super.getSrcInfo()+", value="+vl+", unifier="+u);
-                    
+
                     u.remove(this); // remove this var to avoid loops in the apply below
                     Term tempVl = vl.capply(u);
                     u.bind(this, vl);
-                    
+
                     CyclicTerm ct = new CyclicTerm((Literal)tempVl, this);
                     Unifier renamedVars = new Unifier(); // remove "this" from the value to avoid loops in apply
                     ct.makeVarsAnnon(renamedVars);
@@ -82,25 +82,24 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
                     u.compose(renamedVars);
                     vl = ct;
                 }
-                
+
                 vl = vl.capply(u); // should clone here, since there is no cloning in unify
-                
+
                 if (vl.isLiteral()) {
                     if (getNS() != Literal.DefaultNS) {
-                        // TODO: change capply to has the new namespace as parameter and them remove this code
                         // use var ns for the value ns
                         vl = ((Literal)vl).cloneNS(  (Atom)getNS().capply(u) ); // this var ns could be a var, so capply
                     }
                     if (negated()) {
                         ((Literal)vl).setNegated(Literal.LNeg);
-                    }                    
+                    }
                 }
-                    
-                
+
+
                 // decide whether to use var annots in apply
                 //   X = p[a]
                 //   !X[b]
-                // what's the event: 
+                // what's the event:
                 //   +!p[a]
                 // or
                 //   +!p[a,b]
@@ -112,13 +111,13 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
                 return vl;
             }
         }
-        return clone();            
+        return clone();
     }
 
     public Term clone() {
         return new VarTerm(this.getNS(), this);
     }
-    
+
     @Override
     public Literal cloneNS(Atom newNameSpace) {
         return new VarTerm(newNameSpace, this);
@@ -136,7 +135,7 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
     public boolean isUnnamedVar() {
         return false;
     }
-    
+
     @Override
     public boolean isGround() {
         return false;
@@ -153,12 +152,12 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
         // is t also a var? (its value must also be null)
         if (t instanceof VarTerm) {
             final VarTerm tAsVT = (VarTerm) t;
-            return //negated() == tAsVT.negated() && 
-                   getFunctor().equals(tAsVT.getFunctor()); // && getNS().equals(tAsVT.getNS());
+            return //negated() == tAsVT.negated() &&
+                getFunctor().equals(tAsVT.getFunctor()); // && getNS().equals(tAsVT.getNS());
         }
         return false;
     }
-    
+
     @Override
     protected int calcHashCode() {
         int result = getFunctor().hashCode();
@@ -166,7 +165,7 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
         // Do not consider NS and negated! (in unifier, A = ~A)
         return result;
     }
-    
+
 
     public int compareTo(Term t) {
         if (t == null || t.isUnnamedVar())
@@ -175,12 +174,12 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
             //if (!negated() && ((VarTerm)t).negated())
             //    return -1;
             //else
-                return getFunctor().compareTo(((VarTerm)t).getFunctor());
-        } else { 
+            return getFunctor().compareTo(((VarTerm)t).getFunctor());
+        } else {
             return 1;
         }
     }
-    
+
     @Override
     public boolean subsumes(Term t) {
         return true;
@@ -188,7 +187,7 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
 
     // ----------
     // Term methods overridden
-    // 
+    //
     // in case this VarTerm has a value, use value's methods
     // ----------
 
@@ -198,7 +197,7 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
         Term t = this.capply(un);
         if ( t.equals(this) ) {
             // the variable is still a Var, find all bels that unify.
-            return super.logicalConsequence(ag, un);                
+            return super.logicalConsequence(ag, un);
         } else {
             // the clone is still a var
             return ((LogicalFormula)t).logicalConsequence(ag, un);
@@ -212,10 +211,10 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
 
     @Override
     public void addTerm(Term t) {
-        logger.log(Level.WARNING, "The addTerm '"+t+"' in "+this+" was lost, since I am a var.", new Exception());                
+        logger.log(Level.WARNING, "The addTerm '"+t+"' in "+this+" was lost, since I am a var.", new Exception());
     }
 
-    
+
     @Override
     public int getArity() {
         return 0;
@@ -255,7 +254,7 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
     public boolean isString() {
         return false;
     }
-    
+
     @Override
     public boolean isPlanBody() {
         return false;
@@ -300,7 +299,7 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
     public boolean isCyclicTerm() {
         return false;
     }
-    
+
     @Override
     public boolean hasVar(VarTerm t, Unifier u) {
         if (equals(t))
@@ -316,19 +315,19 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
                     u.bind(this, vl);
                 }
             }
-                
+
         }
-              
+
         return false;
     }
-    
+
     @Override
     public void countVars(Map<VarTerm, Integer> c) {
         int n = c.containsKey(this) ? c.get(this) : 0;
         c.put(this, n+1);
         super.countVars(c);
     }
-    
+
     @Override
     public boolean canBeAddedInBB() {
         return false;
@@ -340,13 +339,13 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
     // ----------
 
     public double solve() throws NoValueException {
-        throw new NoValueException();
+        throw new NoValueException("Error evaluating "+this+". It is not ground!");
     }
 
     // ----------
     //
     // ListTerm methods overridden
-    // 
+    //
     // ----------
 
     public void add(int index, Term o) {
@@ -357,7 +356,7 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
     }
 
     public boolean addAll(@SuppressWarnings("rawtypes") Collection c) {
-        return false; 
+        return false;
     }
 
     public boolean addAll(int index, @SuppressWarnings("rawtypes") Collection c) {
@@ -368,11 +367,11 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
     }
 
     public boolean contains(Object o) {
-        return false; 
+        return false;
     }
 
     public boolean containsAll(@SuppressWarnings("rawtypes") Collection c) {
-        return false; 
+        return false;
     }
 
     public Term get(int index) {
@@ -422,7 +421,7 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
     public List<Term> subList(int arg0, int arg1) {
         return null;
     }
-    
+
     public Iterator<List<Term>> subSets(int k) {
         return null;
     }
@@ -481,7 +480,7 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
     public ListTerm getPenultimate() {
         return null;
     }
-    
+
     public Term removeLast() {
         return null;
     }
@@ -495,7 +494,7 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
     }
 
     public boolean isEmpty() {
-        return false; 
+        return false;
     }
 
     public boolean isEnd() {
@@ -522,10 +521,10 @@ public class VarTerm extends LiteralImpl implements NumberTerm, ListTerm { //, S
     }
 
     public ListTerm cloneLTShallow() {
-        return null;        
+        return null;
     }
 
-    
+
     /** get as XML */
     public Element getAsDOM(Document document) {
         Element u = (Element) document.createElement("var-term");

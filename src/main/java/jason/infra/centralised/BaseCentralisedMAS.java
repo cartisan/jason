@@ -3,13 +3,16 @@ package jason.infra.centralised;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+
+import javax.management.NotificationBroadcasterSupport;
+
 import jason.mas2j.MAS2JProject;
 import jason.runtime.RuntimeServicesInfraTier;
 
 /**
  * Runs MASProject using centralised infrastructure.
  */
-public abstract class BaseCentralisedMAS {
+public abstract class BaseCentralisedMAS extends NotificationBroadcasterSupport {
 
     public final static String       logPropFile     = "logging.properties";
     public final static String       stopMASFileName = ".stop___MAS";
@@ -21,7 +24,7 @@ public abstract class BaseCentralisedMAS {
     protected static boolean            readFromJAR   = false;
     protected static MAS2JProject       project;
     protected static boolean            debug         = false;
-    
+
     protected CentralisedEnvironment        env         = null;
     protected CentralisedExecutionControl   control     = null;
     protected Map<String,CentralisedAgArch> ags         = new ConcurrentHashMap<String,CentralisedAgArch>();
@@ -29,7 +32,7 @@ public abstract class BaseCentralisedMAS {
     public boolean isDebug() {
         return debug;
     }
-    
+
     public static BaseCentralisedMAS getRunner() {
         return runner;
     }
@@ -37,7 +40,7 @@ public abstract class BaseCentralisedMAS {
     public RuntimeServicesInfraTier getRuntimeServices() {
         return new CentralisedRuntimeServices(runner);
     }
-    
+
     public CentralisedExecutionControl getControllerInfraTier() {
         return control;
     }
@@ -45,7 +48,7 @@ public abstract class BaseCentralisedMAS {
     public CentralisedEnvironment getEnvironmentInfraTier() {
         return env;
     }
-    
+
     public MAS2JProject getProject() {
         return project;
     }
@@ -59,21 +62,25 @@ public abstract class BaseCentralisedMAS {
     public CentralisedAgArch delAg(String agName) {
         return ags.remove(agName);
     }
-    
+
     public CentralisedAgArch getAg(String agName) {
         return ags.get(agName);
     }
-    
+
     public Map<String,CentralisedAgArch> getAgs() {
         return ags;
     }
+
+    public int getNbAgents() {
+        return ags.size();
+    }
     
     public abstract void setupLogger();
-        
+
     public abstract void finish();
 
     public abstract boolean hasDebugControl();
 
     public abstract void enableDebugControl();
-    
+
 }

@@ -78,7 +78,7 @@ task copyJarsToBuild {
 			    String line -> line.replaceAll("JasonREL=[0-9]+\\.[0-9]+", "JasonREL="+project.version)
 			}
 			filter {
-				String line -> line.replaceAll("JadeREL", file(project.configurations.compile.find { it.name.startsWith("jade-") }).name)
+				String line -> line.replaceAll("JadeJar", file(project.configurations.compile.find { it.name.startsWith("jade-") }).name)
 			}
      	}   
     }
@@ -175,10 +175,6 @@ clean {
         }
     }
     emptyDirs.reverseEach { it.delete() }
-}
-
-test << {
-    delete fileTree('.')  { include '**/bookstore.*'  }
 }
 
 task config (type: JavaExec, dependsOn: ['jar', 'plugin']) {
@@ -278,16 +274,23 @@ publishing {
 
 // from http://central.sonatype.org/pages/gradle.html
 
-// uncomment to produce maven jar
 task javadocJar (type: Jar, dependsOn: javadoc) {
     baseName 'jason'
     classifier = 'javadoc'
     from '${docsDir}/../../doc/api'
 }
 
+// see http://central.sonatype.org/pages/releasing-the-deployment.html
+// run gradle uploadArchives
+// login https://oss.sonatype.org/
+// select Staging Repositories
+// search jason, close, refresh, release
+
+// uncomment to produce maven jar
+
 /*
 artifacts {
-    archives sourceJar //, javadocJar
+    archives sourceJar, javadocJar
 }
 
 signing {
@@ -396,7 +399,8 @@ task plugin(type: Jar, dependsOn: 'classes') {
 
 
 // transfer local maven artifact to our maven2 repository at sourceforge
-task publishMavenSF(dependsOn: [ 'build', 'publishToMavenLocal']) << {
+task publishMavenSF(dependsOn: [ 'build', 'publishToMavenLocal']) {
+  doLast {
     def wdir = System.getProperty("user.home")+'/.m2/repository/org/jason-lang/jason'
     def tdir = 'jomifred,jacamo@web.sf.net:/home/project-web/jacamo/htdocs/maven2/org/jason-lang/jason'
     exec {
@@ -411,14 +415,15 @@ task publishMavenSF(dependsOn: [ 'build', 'publishToMavenLocal']) << {
         commandLine 'scp', 'maven-metadata.xml', tdir
         workingDir wdir
     }
+  }
 }
 
 // Builds the distribution, documentation and a new release
-task doc(dependsOn: [ 'jjdoc', 'javadoc', 'renderAsciiDocs']) << {
+task doc(dependsOn: [ 'jjdoc', 'javadoc', 'renderAsciiDocs']) {
 }
 
 task renderAsciiDocs(type: Exec) {
-    commandLine 'find', '.', '-name', '*.adoc', '-exec', 'asciidoctor', '{}', ';'
+    commandLine 'find', '.', '-name', '*.adoc', '-exec', 'asciidoctor', '-r', project.buildDir.absolutePath+'/../src/main/resources/pygments_init.rb', '{}', ';'
 }
 
 task fixTab {
@@ -430,11 +435,12 @@ task fixTab {
 }
 
 // Builds the distribution, documentation and a new release
-task release(dependsOn: [ 'build', 'doc', 'fixTab', 'zipRel', 'plugin' ]) << {
+task release(dependsOn: [ 'build', 'doc', 'fixTab', 'plugin', 'zipRel' ]) {
 }
 
 // copy files used to build a release
-task copyRel << {
+task copyRel (dependsOn: ['plugin', 'jar']) {
+  doLast {
     copy {
         from '.'
         into 'build/jason-'+project.version
@@ -445,6 +451,10 @@ task copyRel << {
     }
     delete fileTree('build/jason-'+project.version+'/doc')  { include '**/*.adoc', '**/Makefile'  }
 
+    copy {
+        from 'build/scripts'
+        into 'build/jason-'+project.version+'/scripts'
+    }
     copy {
         from libsDir
         from configurations.runtime
@@ -463,6 +473,11 @@ task copyRel << {
         from 'demos'
         into 'build/jason-'+project.version+'/demos'
     }
+    copy {
+        from 'src'
+        into 'build/jason-'+project.version+'/src'
+    }
+  }
 }
 
 // creates a zip file for a release

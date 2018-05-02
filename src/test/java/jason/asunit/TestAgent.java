@@ -23,18 +23,18 @@ import jason.infra.centralised.RunCentralisedMAS;
 import jason.util.Config;
 
 public class TestAgent extends Agent {
-    
+
     // creates the masRunner
     static {
         new RunCentralisedMAS();
         Config.get().setProperty(Config.START_WEB_MI,  "false");
     }
 
-    
+
     public TestAgent() {
         this(null);
     }
-    
+
     public TestAgent(String agName) {
         try {
             TestArch arch = null;
@@ -44,12 +44,12 @@ public class TestAgent extends Agent {
                 arch = new TestArch(agName);
             new TransitionSystem(this, null, null, arch);
             arch.insertAgArch(arch);
-            initAg(); 
+            initAg();
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error creating TestArch", e);
         }
     }
-    
+
     public boolean parseAScode(String aslCode) {
         try {
             getPL().clear(); // to force KQML plans to be after string plans
@@ -57,10 +57,13 @@ public class TestAgent extends Agent {
             parseAS(new StringReader(aslCode));
             addInitialBelsInBB();
             addInitialGoalsInTS();
-            
+
             // kqml Plans at the end of the ag PS
             setASLSrc("kqmlPlans.asl");
-            parseAS(JasonException.class.getResource("/asl/kqmlPlans.asl"));
+            if (JasonException.class.getResource("/asl/kqmlPlans.asl") == null)
+                logger.warning("kqmlPlans not found!");
+            else
+                parseAS(JasonException.class.getResource("/asl/kqmlPlans.asl"));
             setASLSrc("stringcode");
             return true;
         } catch (Exception e) {
@@ -72,20 +75,25 @@ public class TestAgent extends Agent {
     public TestArch getArch() {
         return (TestArch)getTS().getUserAgArch();
     }
-    
+
     public void setDebugMode(boolean on) {
         if (on) {
             getTS().getLogger().setLevel(Level.FINE);
             getArch().getLogger().setLevel(Level.FINE);
             getTS().getAg().getLogger().setLevel(Level.FINE);
         } else
-            getTS().getLogger().setLevel(Level.INFO);            
+            getTS().getLogger().setLevel(Level.INFO);
     }
     
+    public void clearExecutionTrace() {
+        getArch().clearDoneActions();
+        getArch().clearPrintOutput();
+    }
+
     // --------------------------------------------
     //   methods to change the state of the agent
     // --------------------------------------------
-    
+
     public void addGoal(String g) {
         try {
             addGoal(ASSyntax.parseLiteral(g));
@@ -96,7 +104,7 @@ public class TestAgent extends Agent {
     public void addGoal(Literal g) {
         getTS().getC().addAchvGoal(g, Intention.EmptyInt);
     }
-    
+
     public void addBel(String bel) {
         try {
             super.addBel(ASSyntax.parseLiteral(bel));
@@ -104,7 +112,7 @@ public class TestAgent extends Agent {
             fail("Parsing '"+bel+"' as a belief!");
         } catch (RevisionFailedException e) {
             fail("BRF error for adding '"+bel+"!");
-        }        
+        }
     }
     public void delBel(String bel) {
         try {
@@ -117,13 +125,13 @@ public class TestAgent extends Agent {
             fail("Parsing '"+bel+"' as a belief!");
         } catch (RevisionFailedException e) {
             fail("BRF error for deleting '"+bel+"!");
-        }        
+        }
     }
-    
+
     // --------------------------------------------
     //   assert methods
     // --------------------------------------------
-    
+
     public void assertBel(String formula, int maxCycles) {
         try {
             assertBel(ASSyntax.parseFormula(formula), maxCycles);
@@ -140,8 +148,8 @@ public class TestAgent extends Agent {
         if (!assertMaxCyclesAndAnotherCondition(c, maxCycles))
             fail("failed assertBel("+belief+")");
     }
-    
-    
+
+
     public void assertEvt(String te, int maxCycles) {
         try {
             assertEvt(ASSyntax.parseTrigger(te), maxCycles);
@@ -159,7 +167,7 @@ public class TestAgent extends Agent {
         if (!assertMaxCyclesAndAnotherCondition(c, maxCycles))
             fail("failed assertEvt("+te+")");
     }
-    
+
 
     public void assertAct(String act, int maxCycles) {
         try {
@@ -176,9 +184,32 @@ public class TestAgent extends Agent {
         };
         if (!assertMaxCyclesAndAnotherCondition(c, maxCycles))
             fail("failed assertAct("+act+")");
+        
+        // run one extra cycle to place the intention back
+        assertMaxCyclesAndAnotherCondition(new Condition() {
+            public boolean test(TestArch arch) {
+                return false;
+            }
+        }, 1);
     }
-    
-    
+
+    public void assertNoAct(String act, int maxCycles) {
+        try {
+            assertNoAct(ASSyntax.parseStructure(act), maxCycles);
+        } catch (ParseException e) {
+            fail("Parsing '"+act+"' as action failed!");
+        }
+    }
+    public void assertNoAct(final Structure act, final int maxCycles) {
+        Condition c = new Condition() {
+            public boolean test(TestArch arch) {
+                return arch.getActions().contains(act);
+            }
+        };
+        if (assertMaxCyclesAndAnotherCondition(c, maxCycles))
+            fail("failed assertNoAct("+act+")");
+    }
+
     public void assertIdle(final int maxCycles) {
         Condition c = new Condition() {
             public boolean test(TestArch arch) {
@@ -195,13 +226,11 @@ public class TestAgent extends Agent {
                 return arch.getOutput().indexOf(out) >= 0;
             }
         };
-        if (assertMaxCyclesAndAnotherCondition(c, maxCycles))
-            getArch().clearOutput();
-        else
+        if (!assertMaxCyclesAndAnotherCondition(c, maxCycles))
             fail("failed assertPrint("+out+")");
     }
-    
-    
+
+
     private boolean assertMaxCyclesAndAnotherCondition(final Condition c, final int maxCycles) {
         if (maxCycles <= 0)
             return c.test(getArch());
@@ -222,5 +251,5 @@ public class TestAgent extends Agent {
         }
         return false;
     }
-    
+
 }
