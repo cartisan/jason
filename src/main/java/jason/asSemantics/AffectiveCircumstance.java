@@ -18,7 +18,8 @@ public class AffectiveCircumstance extends Circumstance {
     protected List<Emotion>     PEM;        // primary emotions (reactive)
     protected List<Emotion>     SEM;        // secondary emotions (deliberative)
     protected Mood              M;          // mood
-    protected HashSet<String>      T;          // emotional target agents
+    protected HashSet<String>   T;          // affective target: agents that current mood is directed at
+    protected HashSet<String>   S;          // affective source: event that caused a mood change
     
     public AffectiveCircumstance(AffectiveAgent ag) {
         super();
@@ -77,6 +78,10 @@ public class AffectiveCircumstance extends Circumstance {
         return M;
     }
     
+    public HashSet<String> getS() {
+        return S;
+    }
+    
     public void stepDecayPEM() throws RevisionFailedException {
         this.PEM = stepDecayEmotions(this.getPEM());
     }
@@ -121,6 +126,7 @@ public class AffectiveCircumstance extends Circumstance {
         this.PEM = new LinkedList<Emotion>();
         this.SEM = new LinkedList<Emotion>();
         this.T = new HashSet<String>();
+        this.S = new HashSet<String>();
         
         if(this.ts != null)
             this.createMood(this.getAffectiveAg());

@@ -8,6 +8,7 @@ import jason.asSemantics.AffectiveTransitionSystem;
 import jason.asSemantics.DefaultInternalAction;
 import jason.asSemantics.TransitionSystem;
 import jason.asSemantics.Unifier;
+import jason.asSyntax.ASSyntax;
 import jason.asSyntax.StringTermImpl;
 import jason.asSyntax.Term;
 
@@ -51,9 +52,11 @@ public class appraise_emotion extends DefaultInternalAction {
             case 2: ((AffectiveTransitionSystem) ts).scheduleForAppraisal(args[0].toString(), args[1].toString()); return true;
             case 3: {
                 if (args[2].isString()) {
+                    String source = ((StringTermImpl) args[2]).getString();
+                    Term unifiedSource = ASSyntax.parseLiteral(source).capply(un);
                     ((AffectiveTransitionSystem) ts).scheduleForAppraisal(args[0].toString(),
                                                                           args[1].toString(),
-                                                                          ((StringTermImpl) args[2]).getString());
+                                                                          unifiedSource.toString());
                     return true;
                 } else {
                     throw new JasonException("3rd argument of internal action: appraise_emotion should be a string");

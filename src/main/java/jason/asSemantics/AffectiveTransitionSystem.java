@@ -108,7 +108,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
                     if(emotionLit.getArity() == 2)
                         emotion.setTarget(emotionLit.getTerm(1).toString());
                     
-                    emotion.setCause(percept.getFunctor());
+                    emotion.setCause(percept.toString());
                     
                     this.getAffectiveAg().addEmotion(emotion, "PEM");
                 } catch (ParseException e) {
@@ -224,14 +224,19 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             // if mood changed octants, update agent beliefs and reset target list
             if(oldMood.getType() != newMood.getType()){
                 this.getAffectiveAg().updateMoodType(oldMood, newMood);
-                this.getAffectiveAg().resetAffectTarget();
             } 
         }
         
-        // see if some of the emotions contributed directly to current mood
+        // see if some of the current emotions contributed directly to current mood, if yes extract targets and sources
         for (Emotion emotion: this.getAffectiveC().getAllEmotions()) {
-            if (emotion.hasTarget() && Affect.getOctant(emotion).equals(Affect.getOctant(newMood)))
-                this.getAffectiveAg().addAffectTarget(emotion.target);
+            if (Affect.getOctant(emotion).equals(Affect.getOctant(newMood))) {
+                //emotion contributes to current mood
+                this.getAffectiveAg().addMoodSource(emotion.cause);
+                
+                if (emotion.hasTarget()) {
+                    this.getAffectiveAg().addMoodTarget(emotion.target);
+                }
+            }
         }
     }
     

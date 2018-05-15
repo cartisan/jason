@@ -84,7 +84,7 @@ public class AffectiveAgent extends Agent {
         return personality;
     }
     
-    private AffectiveTransitionSystem getAffectiveTS() {
+    protected AffectiveTransitionSystem getAffectiveTS() {
         return (AffectiveTransitionSystem) this.getTS();
     }
 
@@ -188,15 +188,34 @@ public class AffectiveAgent extends Agent {
         
         this.addBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR,
                                            ASSyntax.createAtom(newMood.getType())));
+    
+        // reset target list in beliefs in BB, too
+        Literal targetLit = this.findBel(ASSyntax.createLiteral("affect_target", ASSyntax.createVar()), new Unifier());
+        this.delBel(targetLit);
+        this.addBel(ASSyntax.createLiteral("affect_target", ASSyntax.createList() ));
+        
+        // update sources and targets in Circumstance
+    	this.getAffectiveTS().getAffectiveC().S.clear();
+    	this.getAffectiveTS().getAffectiveC().T.clear();
     }
     
     private void updateMoodType() throws JasonException {
-        Literal targetLit = this.findBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR, ASSyntax.createVar()),
-                                        new Unifier());
-        this.delBel(targetLit);
-        
+    	// update mood type in belief base
+    	Literal moodLit = this.findBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR, ASSyntax.createVar()),
+                                         new Unifier());
+        this.delBel(moodLit);
         this.addBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR,
                                            ASSyntax.createAtom(this.getMood().getType())));
+        
+        // reset target list in beliefs in BB, too
+        Literal targetLit = this.findBel(ASSyntax.createLiteral("affect_target", ASSyntax.createVar()), new Unifier());
+        this.delBel(targetLit);
+        this.addBel(ASSyntax.createLiteral("affect_target", ASSyntax.createList() ));
+        
+        // update sources and targets in Circumstance
+    	this.getAffectiveTS().getAffectiveC().S.clear();
+    	this.getAffectiveTS().getAffectiveC().T.clear();
+        
 
     }
     
@@ -208,7 +227,7 @@ public class AffectiveAgent extends Agent {
         // abstract method, customer class can override this if required
     }
     
-    protected void addAffectTarget(String target) throws RevisionFailedException {
+    protected void addMoodTarget(String target) throws RevisionFailedException {
         this.getAffectiveTS().getAffectiveC().T.add(target);
         
         // update target beliefs in BB, too
@@ -219,16 +238,11 @@ public class AffectiveAgent extends Agent {
         this.addBel(ASSyntax.createLiteral("affect_target", ASSyntax.createList(targets) ));
         
     }
-    
-    protected void resetAffectTarget() throws RevisionFailedException {
-        this.getAffectiveTS().getAffectiveC().T.clear();
-        
-        // reset target beliefs in BB, too
-        Literal targetLit = this.findBel(ASSyntax.createLiteral("affect_target", ASSyntax.createVar()), new Unifier());
-        this.delBel(targetLit);
-        
-        this.addBel(ASSyntax.createLiteral("affect_target", ASSyntax.createList() ));
-    }
+
+	public void addMoodSource(String cause) {
+        this.getAffectiveTS().getAffectiveC().S.add(cause);
+		
+	}
     
     public Mood getMood() {
         return this.getAffectiveTS().getAffectiveC().getM();
@@ -237,4 +251,5 @@ public class AffectiveAgent extends Agent {
     public List<Emotion> getEmotions() {
         return this.getAffectiveTS().getAffectiveC().getAllEmotions();
     }
+
 }
