@@ -329,7 +329,10 @@ public class TransitionSystem {
                         sender = "self";
                     
                     boolean added = false;
-                    if (!setts.isSync() && !ag.getPL().hasUserKqmlReceivedPlans() && content.isLiteral() && !content.isList()) { // optimisation to jump kqmlPlans
+                    
+//                    if (!setts.isSync() && !ag.getPL().hasUserKqmlReceivedPlans() && content.isLiteral() && !content.isList()) { // optimisation to jump kqmlPlans
+                    // FIXME: Enabled kqmlPlan optimisation for synchronois reasoning cycle execution. Why was it switched off?
+                    if (!ag.getPL().hasUserKqmlReceivedPlans() && content.isLiteral() && !content.isList()) { // optimisation to jump kqmlPlans
                         if (m.getIlForce().equals("achieve") ) {                             
                             content = add_nested_source.addAnnotToList(content, new Atom(sender));
                             C.addEvent(new Event(new Trigger(TEOperator.add, TEType.achieve, (Literal)content), Intention.EmptyInt));
