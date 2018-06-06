@@ -19,7 +19,7 @@ public class AffectiveCircumstance extends Circumstance {
     protected List<Emotion>     SEM;        // secondary emotions (deliberative)
     protected Mood              M;          // mood
     protected HashSet<String>   T;          // affective target: agents that current mood is directed at
-    protected HashSet<String>   S;          // affective source: event that caused a mood change
+    protected LinkedList<String>   S;          // affective source: event that caused a mood change
     
     public AffectiveCircumstance(AffectiveAgent ag) {
         super();
@@ -78,7 +78,7 @@ public class AffectiveCircumstance extends Circumstance {
         return M;
     }
     
-    public HashSet<String> getS() {
+    public LinkedList<String> getS() {
         return S;
     }
     
@@ -126,7 +126,7 @@ public class AffectiveCircumstance extends Circumstance {
         this.PEM = new LinkedList<Emotion>();
         this.SEM = new LinkedList<Emotion>();
         this.T = new HashSet<String>();
-        this.S = new HashSet<String>();
+        this.S = new LinkedList<String>();
         
         if(this.ts != null)
             this.createMood(this.getAffectiveAg());
