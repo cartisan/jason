@@ -179,7 +179,7 @@ public class MASConsoleGUI {
                     });
                 }
                 if (ta != null) {
-                    if (ta.getDocument().getLength() > 900010) {
+                    if (ta.getDocument().getLength() > 9000000) {
                         ta.setText("");
                     }
                     ta.append(s);
@@ -189,7 +189,7 @@ public class MASConsoleGUI {
             // print in output
             synchronized (output) {
                 try {
-                    if (output.getDocument().getLength() > 900000) {
+                    if (output.getDocument().getLength() > 9000000) {
                         cleanConsole();
                     }
                     output.append(s);
