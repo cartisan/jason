@@ -190,7 +190,11 @@ public class Emotion implements Affect {
         
         if(this.hasCause()) {
           try {
-                Literal annot = ASSyntax.createLiteral("cause",  ASSyntax.parseLiteral(this.cause));
+                String cleanCause = this.cause;
+                if ((cleanCause.startsWith("+") | (cleanCause.startsWith("-")))) {
+                    cleanCause = cleanCause.substring(1);
+                }
+                Literal annot = ASSyntax.createLiteral("cause",  ASSyntax.parseLiteral(cleanCause));
                 emLit.addAnnot(annot);
           } catch (ParseException e) {
               logger.warning("Emotion-instance of " + this.name + " malformed, cause: " +
