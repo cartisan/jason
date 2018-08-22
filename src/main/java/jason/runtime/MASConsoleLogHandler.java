@@ -1,6 +1,8 @@
 package jason.runtime;
 
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -45,6 +47,12 @@ public class MASConsoleLogHandler extends StreamHandler  {
     }
 
     public void publish(LogRecord l) {
-        fGUI.append(MASConsoleLogFormatter.getAgName(l), getFormatter().format(l));
+        String log = getFormatter().format(l);
+        if(l.getThrown() != null) {
+            StringWriter sw = new StringWriter();
+            l.getThrown().printStackTrace(new PrintWriter(sw));
+            log += "Exception: " + sw.toString();
+        }
+        fGUI.append(MASConsoleLogFormatter.getAgName(l), log);
     }
 }
