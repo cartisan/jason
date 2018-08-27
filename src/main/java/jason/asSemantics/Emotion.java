@@ -32,7 +32,7 @@ public class Emotion implements Affect {
     
     static final Pattern BASE_PATTERN = Pattern.compile("emotion\\((.+?)\\)(\\[.+\\])?");
     static final Pattern TARGET_PATTERN = Pattern.compile("target\\((.+?)\\)");
-    static final Pattern CAUSE_PATTERN = Pattern.compile("cause\\((.+?)\\)");
+    static final Pattern CAUSE_PATTERN = Pattern.compile("cause\\((.+)(\\[.+?\\])\\)");
     
     /* Choosing an emotion acc. to OCC, decision tree:
      * [valenced reaction to] --- [aspects of objects] ----------------------------------------------------------- love / hate 
@@ -124,12 +124,16 @@ public class Emotion implements Affect {
             String annotation = res.group(2);
             if(annotation !=  null) {
                 m = TARGET_PATTERN.matcher(annotation);
-                if (m.find())
-                    em.setTarget(m.group(1));
+                if (m.find()) {
+                    String target = m.group(1);
+                    em.setTarget(target);
+                }
                 
                 m = CAUSE_PATTERN.matcher(annotation);
-                if (m.find())
-                    em.setCause(m.group(1));               
+                if (m.find()) {
+                    String cause = m.group(1); // excludes annotations in cause
+                    em.setCause(cause);
+                }
             }
             
             return em;
@@ -186,7 +190,11 @@ public class Emotion implements Affect {
         
         if(this.hasCause()) {
           try {
-                Literal annot = ASSyntax.createLiteral("cause",  ASSyntax.parseLiteral(this.cause));
+                String cleanCause = this.cause;
+                if ((cleanCause.startsWith("+") | (cleanCause.startsWith("-")))) {
+                    cleanCause = cleanCause.substring(1);
+                }
+                Literal annot = ASSyntax.createLiteral("cause",  ASSyntax.parseLiteral(cleanCause));
                 emLit.addAnnot(annot);
           } catch (ParseException e) {
               logger.warning("Emotion-instance of " + this.name + " malformed, cause: " +

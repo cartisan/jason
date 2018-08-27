@@ -57,6 +57,12 @@ public class Personality implements Serializable {
         double p = 0.21*E + 0.59*A - 0.19*N;
         double a = 0.15*O + 0.30*A + 0.57*N;
         double d = 0.25*O + 0.17*C + 0.60*E - 0.32*A;
+        
+        // normalize to -1,1 range
+        p /= (0.21 + 0.59 + 0.19);
+        a /= (0.15 + 0.30 + 0.57);
+        d /= (0.25 + 0.17 + 0.60 + 0.32);
+        
         return new Mood(p, a, d);
     }
 

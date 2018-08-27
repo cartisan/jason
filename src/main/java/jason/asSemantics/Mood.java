@@ -44,7 +44,7 @@ public class Mood implements Serializable, Affect {
     
     public static void setStepLengths() {
         // maximal dist. in PDA space: (1,1,1) to (-1,-1,-1) --> d_max = sqrt(2²+2²+2²) = 3.46
-        // we want a mood to completely decay back to default mood in at most 10 cycles
+        // if we want a mood to completely decay back to default mood in at most 10 cycles
         // --> one step should be d_max / 10 = 0.35
         DECAY_STEP_LENGTH = Math.sqrt(12) / MAX_DECAY_TIME;
               
@@ -61,8 +61,8 @@ public class Mood implements Serializable, Affect {
 
     public Mood(double p, double a, double d) {
         if(p>1 | a>1 | d>1 | p<-1 | a<-1 | d<-1) {
-            logger.warning("One of the Mood parameters exceeds the bounds (-1.0 < x < 1.0).");
-            throw new IllegalArgumentException("One of the Mood parameters exceeds the bounds (-1.0 < x < 1.0).");
+            IllegalArgumentException ex =  new IllegalArgumentException("One of the Mood parameters: (" + p + "," +a + "," + d + ") exceeds the bounds (-1.0 < x < 1.0)");
+            throw ex;
         }
 
         this.PAD = new Point3D(p, a, d);

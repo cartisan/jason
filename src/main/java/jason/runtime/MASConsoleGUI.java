@@ -159,7 +159,13 @@ public class MASConsoleGUI {
     public void append(final String agName, String s) {
         try {
             if (!frame.isVisible()) {
-                frame.setVisible(true);
+            	/** FIXME: removed to prevent stackoverflow 
+            	during RunCentralisedMAS#init; l.115:
+            	`MASConsoleGUI.get().getFrame().setVisible(true)`
+            	which for some reasons appeared in debug mode only after
+            	adding a new button            	
+            	 **/
+//                frame.setVisible(true);
             }
             if (inPause) {
                 waitNotPause();
@@ -179,7 +185,7 @@ public class MASConsoleGUI {
                     });
                 }
                 if (ta != null) {
-                    if (ta.getDocument().getLength() > 900010) {
+                    if (ta.getDocument().getLength() > 9000000) {
                         ta.setText("");
                     }
                     ta.append(s);
@@ -189,7 +195,7 @@ public class MASConsoleGUI {
             // print in output
             synchronized (output) {
                 try {
-                    if (output.getDocument().getLength() > 900000) {
+                    if (output.getDocument().getLength() > 9000000) {
                         cleanConsole();
                     }
                     output.append(s);
