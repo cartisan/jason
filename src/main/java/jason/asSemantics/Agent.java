@@ -808,7 +808,7 @@ public class Agent {
                     ts.updateEvents(new Event(new Trigger(TEOperator.add, TEType.belief, lp), Intention.EmptyInt));
                 }
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "Error adding percetion " + lw.getLiteral(), e);
+                logger.log(Level.SEVERE, "Error adding perception " + lw.getLiteral(), e);
             }
         }
         
