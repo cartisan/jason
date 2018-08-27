@@ -63,9 +63,9 @@ public class TransitionSystem {
     private Settings      setts      = null;
     //private State         step       = State.StartRC; // first step of the SOS
 
-    private State         stepSense       = State.StartRC;
-    private State         stepDeliberate  = State.SelEv;
-    private State         stepAct         = State.ProcAct;
+    protected State         stepSense       = State.StartRC;
+    protected State         stepDeliberate  = State.SelEv;
+    protected State         stepAct         = State.ProcAct;
 
 
     private int           nrcslbr    = Settings.ODefaultNRC; // number of reasoning cycles since last belief revision

@@ -15,11 +15,11 @@ import jason.asSyntax.parser.ParseException;
 import jason.runtime.Settings;
 
 public class AffectiveTransitionSystem extends TransitionSystem {
-	
-	
-    public enum AffectState { DerivePEM, DeriveSEM, UpMood }
-	
-	private String originalStepDeliberate = "";
+    
+    public enum AffectState { DerivePEM, DeriveSEM, UpMood, Noop }
+    
+    protected AffectState         stepSense = AffectState.Noop;
+    protected AffectState         stepDeliberate = AffectState.Noop;
     
     /**
      * Contains emotion names of emotions appraised during ASL reasoning.
@@ -54,9 +54,10 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     
     @Override
     protected void applySemanticRuleSense() throws JasonException {
-        getLogger().fine(this.toString() + " sense step: " + stepSense);
+        getLogger().fine(this.toString() + " affective sense step: " + this.stepSense);
+        getLogger().fine(super.toString() + " sense step: " + super.stepSense);
         switch (stepSense) {
-            case "DerivePEM": applyDerivePEM(); break;
+            case DerivePEM: applyDerivePEM(); break;
         default:
             super.applySemanticRuleSense();
         }
@@ -64,10 +65,11 @@ public class AffectiveTransitionSystem extends TransitionSystem {
 
     @Override
     protected void applySemanticRuleDeliberate() throws JasonException {
-        getLogger().fine(this.toString() + " deliberate step: " + stepDeliberate);
+        getLogger().fine(this.toString() + " affective deliberate step: " + stepDeliberate);
+        getLogger().fine(super.toString() + " deliberate step: " + super.stepDeliberate);
         switch (stepDeliberate) {
-            case "DeriveSEM":     applyDeriveSEM(); break; 
-            case "UpMood":        applyUpMood(); break; 
+            case DeriveSEM:     applyDeriveSEM(); break; 
+            case UpMood:        applyUpMood(); break; 
         default:
             super.applySemanticRuleDeliberate();  
         }
@@ -75,7 +77,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     
     @Override
     protected void applySemanticRuleAct() throws JasonException {
-        getLogger().fine(this.toString() + " act step: " + stepAct);
+        getLogger().fine(super.toString() + " act step: " + super.stepAct);
         super.applySemanticRuleAct();
     }
     
@@ -83,11 +85,13 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     @Override
     protected void applyProcMsg() throws JasonException {
         super.applyProcMsg();
-        this.stepSense = "DerivePEM";
+        this.stepSense = AffectState.DerivePEM;
     }
     
     protected void applyDerivePEM() throws JasonException {
-        this.stepSense = "SelEv";
+        // Done with affective deliberate after this, give control back to TransitionSystem
+        this.stepSense = AffectState.Noop;
+        super.stepSense = State.SelEv;
         
         // apply one step of decay to old pem
         this.getAffectiveC().stepDecayPEM();
@@ -127,15 +131,15 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     protected void applySelEv() throws JasonException {
         // Rule for atomic, if there is an atomic intention, do not select event
         if (C.hasAtomicIntention()) {
-            this.originalStepDeliberate = "ProcAct"; // need to go to ProcAct to see if an atomic intention received a feedback action
-            this.stepDeliberate = "DeriveSEM";       // but first derive secondary emotions
+            super.stepDeliberate = State.ProcAct;              // need to go to ProcAct to see if an atomic intention received a feedback action
+            this.stepDeliberate = AffectState.DeriveSEM;       // but first derive secondary emotions
             return;            
         }
 
         // Rule for atomic, events from atomic intention have priority
         this.C.SE = C.removeAtomicEvent();
         if (this.C.SE != null) {
-            this.stepDeliberate = "RelPl";
+            super.stepDeliberate = State.RelPl;
             return;
         }
 
@@ -145,7 +149,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
                 if (ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("mood")) {
                     this.C.getEvents().remove(ev);
                     this.C.SE = ev;
-                    this.stepDeliberate = "RelPl";
+                    super.stepDeliberate = State.RelPl;
                     return;
                 }
             }           
@@ -155,21 +159,22 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             if (getLogger().isLoggable(Level.FINE)) 
                 getLogger().fine("Selected event "+this.C.SE);
             if (this.C.SE != null) {
-                this.stepDeliberate = "RelPl";
+                super.stepDeliberate = State.RelPl;
                 return;
             }
         }
         // Rule SelEv2
         // directly to deriveSEM and updateMood, then to ProcAct if no event to handle
-        this.originalStepDeliberate = "ProcAct";
-        this.stepDeliberate = "DeriveSEM";
+        super.stepDeliberate = State.ProcAct;
+        this.stepDeliberate = AffectState.DeriveSEM;
     }
     
     @Override
     protected void applyFindOp() throws JasonException {
         // can't use optimized AplPl selection cause SEM need access to C.RP which are not generated here
         // go back to original reasoning cycle
-        this.stepDeliberate = "RelPl";
+        super.stepDeliberate = State.RelPl;
+        this.stepDeliberate = AffectState.Noop;
     }
     
     @Override
@@ -180,19 +185,17 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         // -ProcAct, when no relevant plans were found 
         // -SelEv, if "irrelevant" event was selected 
         
-        if (stepDeliberate == "SelEv")
+        if (super.stepDeliberate == State.SelEv)
             return;
         
-        this.originalStepDeliberate = this.stepDeliberate;
-        this.stepDeliberate = "DeriveSEM";
+        this.stepDeliberate = AffectState.DeriveSEM;
     }
     
     protected void applyDeriveSEM() throws JasonException {
-        this.stepDeliberate = "UpMood";
+        this.stepDeliberate = AffectState.UpMood;
         
         // apply one decay step on old sem
         this.getAffectiveC().stepDecaySEM();
-        
         
         // derive new sem
         // TODO: perform more appraisal that e.g. takes into account C.RP?
@@ -205,7 +208,9 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     }
     
     protected void applyUpMood() throws JasonException {
-        this.stepDeliberate = this.originalStepDeliberate;
+        // Done with affective deliberate after this, give control back to TransitionSystem
+        this.stepDeliberate = AffectState.Noop;
+        
         Mood oldMood = this.getAffectiveC().getM().clone();
         List<Emotion> emotions = this.getAffectiveC().getAllEmotions();
         
@@ -297,13 +302,13 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         getC().SO = getAg().selectOption(getC().AP);
 
         if (getC().SO != null) {
-            stepDeliberate = "AddIM";
+            super.stepDeliberate = State.AddIM;
             if (getLogger().isLoggable(Level.FINE)) getLogger().fine("Selected option "+getC().SO+" for event "+getC().SE);
         } else {
             getLogger().fine("** selectOption returned null!");
             generateGoalDeletionFromEvent(JasonException.createBasicErrorAnnots("no_option", "selectOption returned null"));
             // can't carry on, no applicable plan.
-            stepDeliberate = "ProcAct";
+            super.stepDeliberate = State.ProcAct;
         }
     }
     
