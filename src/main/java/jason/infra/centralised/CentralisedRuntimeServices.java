@@ -60,6 +60,7 @@ public class CentralisedRuntimeServices implements RuntimeServicesInfraTier {
             agArch.setControlInfraTier(masRunner.getControllerInfraTier());
             
             // if debug mode is active, set up new agent to be synchronous and visible for ExecutionControlGUI
+<<<<<<< HEAD
             if(BaseCentralisedMAS.debug) {
                 stts.setVerbose(2);
                 stts.setSync(true);
@@ -67,6 +68,15 @@ public class CentralisedRuntimeServices implements RuntimeServicesInfraTier {
                 agArch.getTS().getLogger().setLevel(Level.FINE);
                 agArch.getTS().getAg().getLogger().setLevel(Level.FINE);
             } 
+=======
+            if (masRunner.isDebug()) {
+                stts.setVerbose(2);
+                stts.setSync(true);
+                agArch.getLogger().setLevel(Level.FINE);
+                agArch.getTS().getLogger().setLevel(Level.FINE);
+                agArch.getTS().getAg().getLogger().setLevel(Level.FINE);
+            }
+>>>>>>> refs/heads/master
 
             masRunner.addAg(agArch);
         }

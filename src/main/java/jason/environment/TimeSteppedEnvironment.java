@@ -52,13 +52,24 @@ public class TimeSteppedEnvironment extends Environment {
    
     private OverActionsPolicy overActPol = OverActionsPolicy.failSecond;
 
+<<<<<<< HEAD
+=======
+
+    private OverActionsPolicy overActPol = OverActionsPolicy.failSecond;
+>>>>>>> refs/heads/master
 
     public TimeSteppedEnvironment() {
         super(2);
     }
+<<<<<<< HEAD
     
     /**
      * Resets and step counter and scheduled action requests to neutral state, optionally sets a timeout for waiting
+=======
+
+    /**
+     * Resets step counter and scheduled action requests to neutral state, optionally sets a timeout for waiting
+>>>>>>> refs/heads/master
      * on agent actions in a step.
      * 
      * @param args either empty, or contains timeout in milliseconds at pos 0
