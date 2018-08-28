@@ -292,22 +292,6 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             this.applyRelApplPlRule2("applicable");
     }
 
-    @Override
-    protected void applySelAppl() throws JasonException {
-        // Rule SelAppl
-        getC().SO = getAg().selectOption(getC().AP);
-
-        if (getC().SO != null) {
-            stepDeliberate = "AddIM";
-            if (getLogger().isLoggable(Level.FINE)) getLogger().fine("Selected option "+getC().SO+" for event "+getC().SE);
-        } else {
-            getLogger().fine("** selectOption returned null!");
-            generateGoalDeletionFromEvent(JasonException.createBasicErrorAnnots("no_option", "selectOption returned null"));
-            // can't carry on, no applicable plan.
-            stepDeliberate = "ProcAct";
-        }
-    }
-    
     public void scheduleForAppraisal(String emotion) throws JasonException {
         this.scheduleForAppraisal(emotion, null, null);
     }
