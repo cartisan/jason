@@ -54,24 +54,31 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     
     @Override
     protected void applySemanticRuleSense() throws JasonException {
-        getLogger().fine(this.toString() + " affective sense step: " + this.stepSense);
-        getLogger().fine(super.toString() + " sense step: " + super.stepSense);
         switch (stepSense) {
-            case DerivePEM: applyDerivePEM(); break;
-        default:
-            super.applySemanticRuleSense();
+            case DerivePEM: 
+                getLogger().fine(this.toString() + " sense step: " + this.stepSense);
+                applyDerivePEM(); 
+                break;
+            default:
+                getLogger().fine(super.toString() + " sense step: " + super.stepSense);
+                super.applySemanticRuleSense();
         }
     }
 
     @Override
     protected void applySemanticRuleDeliberate() throws JasonException {
-        getLogger().fine(this.toString() + " affective deliberate step: " + stepDeliberate);
-        getLogger().fine(super.toString() + " deliberate step: " + super.stepDeliberate);
         switch (stepDeliberate) {
-            case DeriveSEM:     applyDeriveSEM(); break; 
-            case UpMood:        applyUpMood(); break; 
-        default:
-            super.applySemanticRuleDeliberate();  
+            case DeriveSEM:
+                getLogger().fine(this.toString() + " deliberate step: " + stepDeliberate);
+                applyDeriveSEM();
+                break; 
+            case UpMood:
+                getLogger().fine(this.toString() + " deliberate step: " + stepDeliberate);
+                applyUpMood();
+                break; 
+            default:
+                getLogger().fine(super.toString() + " deliberate step: " + super.stepDeliberate);
+                super.applySemanticRuleDeliberate();  
         }
     }
     
