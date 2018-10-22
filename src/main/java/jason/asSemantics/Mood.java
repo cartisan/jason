@@ -21,8 +21,8 @@ import javafx.geometry.Point3D;
  *  @author Leonid Berov
  */
 public class Mood implements Serializable, Affect {
-    private static final long serialVersionUID = 1L;
-    static final String ANNOTATION_FUNCTOR = "mood";
+    static private final long serialVersionUID = 1L;
+    static public final String ANNOTATION_FUNCTOR = "mood";
 
     // defines how many decay steps are needed at most for a mood to return to default mood at N==0
     // N <> 0 affects DECAY_TIME: the higher N, the slower Mood decays (and inverse, too)

@@ -93,11 +93,49 @@ public class Personality implements Serializable {
             case "neuroticism":         return AffectiveDimensionChecks.BOUNDARIES.get(bound).apply(this.N);
             default:                    return false;
         }
-        
     }
+        
+    /**
+     * Sets this personalitity's `trait` to `value`;
+     * @param trait one of the OCEAN traits, lower-cased
+     * @param value a double between -1 and 1
+     */
+    public void setTrait(String trait, double value) {
+        if((value>1) | (value<-1))
+            throw new RuntimeException("Trying to set personality to an invalid value: " + value);
+        
+        switch(trait) {
+            case "openness":            this.O = value; break;
+            case "conscientiousness":   this.C = value; break;
+            case "extraversion":        this.E = value; break;
+            case "agreeableness":       this.A = value; break;
+            case "neuroticism":         this.N = value; break;
+            default:                    throw new RuntimeException("Trying to set invalid personality trait: " + trait);
+        }
+    }
+    
+    /**
+     * Returns this personalitity's `trait` as double value;
+     * @param trait one of the OCEAN traits, lower-cased
+     */
+    public double getTrait(String trait) {
+        switch(trait) {
+            case "openness":            return this.O;
+            case "conscientiousness":   return this.C;
+            case "extraversion":        return this.E;
+            case "agreeableness":       return this.A;
+            case "neuroticism":         return this.N;
+            default:                    throw new RuntimeException("Trying to set invalid personality trait: " + trait);
+        }
+    }       
     
     @Override
     public String toString() {
         return String.format("O: %s C: %s E: %s A: %s N: %s", O, C, E, A, N);
+    }
+
+    @Override
+    public Personality clone() {
+        return new Personality(O, C, E, A, N);
     }
 }
