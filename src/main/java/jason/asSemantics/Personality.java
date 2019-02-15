@@ -2,6 +2,7 @@ package jason.asSemantics;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -29,7 +30,7 @@ public class Personality implements Serializable {
     private static final long serialVersionUID = 1L;
     static Logger logger = Logger.getLogger(Personality.class.getName());
     
-    static final String ANNOTATION_FUNCTOR = "personality";
+    public static final String ANNOTATION_FUNCTOR = "personality";
     public static final List<String> TRAITS = 
             Arrays.asList("openness", "conscientiousness", "extraversion", "agreeableness", "neuroticism");
 
@@ -45,6 +46,35 @@ public class Personality implements Serializable {
     
     public static Personality createDefaultPersonality() {
         return new Personality(0, 0, 0, 0, 0);
+    }
+    
+    
+    /**
+     * Returns a comapartor that can be used to sort lists of Personalities like this:
+     * <code>list.sort(Personality.comparator())</code>. Sorting according to the values of the traits in OCEAN order.
+     * @return an annonymous comparator function
+     */
+    public static Comparator<Personality> comparator() {
+        return (Personality p1, Personality p2) -> {
+            int o = p1.getTrait(Personality.TRAITS.get(0)) .compareTo(p2.getTrait(Personality.TRAITS.get(0)));
+            if (o != 0)
+                return o;
+            
+            int c = p1.getTrait(Personality.TRAITS.get(1)).compareTo(p2.getTrait(Personality.TRAITS.get(1)));
+            if (c != 0)
+                return c;
+            
+            int e = p1.getTrait(Personality.TRAITS.get(2)).compareTo(p2.getTrait(Personality.TRAITS.get(2)));
+            if (e != 0)
+                return e;
+            
+            int a = p1.getTrait(Personality.TRAITS.get(3)).compareTo(p2.getTrait(Personality.TRAITS.get(3)));
+            if (a != 0)
+                return a;
+            
+            int n = p1.getTrait(Personality.TRAITS.get(4)).compareTo(p2.getTrait(Personality.TRAITS.get(4)));
+            return n;
+        };
     }
     
     /*
@@ -118,7 +148,7 @@ public class Personality implements Serializable {
      * Returns this personalitity's `trait` as double value;
      * @param trait one of the OCEAN traits, lower-cased
      */
-    public double getTrait(String trait) {
+    public Double getTrait(String trait) {
         switch(trait) {
             case "openness":            return this.O;
             case "conscientiousness":   return this.C;
