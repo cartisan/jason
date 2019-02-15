@@ -9,7 +9,7 @@ import java.util.function.Function;
  */
 public interface Affect {
     
-    
+    static public final String ANNOTATION_FUNCTOR = "affect";
     
     public double getP();
     public double getA();

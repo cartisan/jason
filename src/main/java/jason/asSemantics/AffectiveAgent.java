@@ -129,18 +129,17 @@ public class AffectiveAgent extends Agent {
                 //mood(P,lo)
                 return this.getMood().checkConstraint(condition);
             }
-            case "and": {
+            case AffectiveDimensionChecks.AND: {
                 // and(personality(E,hi),mood(P,lo)))
                 List<Term> conditions = condition.getTerms();               
                 return conditions.stream().allMatch(term -> this.checkConstraint((Literal) term));
             }
-            case "or": {
+            case AffectiveDimensionChecks.OR: {
                 // or(personality(E,hi),mood(P,lo)))
                 List<Term> conditions = condition.getTerms();               
                 return conditions.stream().anyMatch(term -> this.checkConstraint((Literal) term));
             }
-            // For some weird reason jason appends a space to our 'not' annotations...
-            case "not ": {
+            case AffectiveDimensionChecks.NOT: {
                 List<Term> innerCondition = condition.getTerms();
                 if(!(innerCondition.size()==1)) {
                     // condition to be negated should contain a function, not a list

@@ -256,7 +256,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         for (Iterator<Option> it = this.C.AP.iterator(); it.hasNext(); ) {
             Option o = it.next();
             
-            Literal affect_condition = (Literal) o.getPlan().getLabel().getAnnots("affect").getTerm();
+            Literal affect_condition = (Literal) o.getPlan().getLabel().getAnnots(Affect.ANNOTATION_FUNCTOR).getTerm();
             if (affect_condition != null) {
               List<Term> innerConditions = affect_condition.getTerms();               
               if(!(innerConditions.size()==1)) {

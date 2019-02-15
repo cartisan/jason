@@ -154,11 +154,11 @@ public class AffectiveCircumstance extends Circumstance {
         //  <emotion pad="(-0.3, 0.1, -0.4)" name="DISAPPOINTMENT"></emotion>
         //  <emotion pad="(0.4, 0.2, -0.3)" name="GRATITUDE"></emotion>
         //</affect>
-        Element affect = document.createElement("affect");
-        affect.setAttribute("mood", getM().toString());
+        Element affect = document.createElement(Affect.ANNOTATION_FUNCTOR);
+        affect.setAttribute(Mood.ANNOTATION_FUNCTOR, getM().toString());
         
         for(Emotion e: this.getAllEmotions()) {
-            Element emotion = document.createElement("emotion");
+            Element emotion = document.createElement(Emotion.ANNOTATION_FUNCTOR);
             emotion.setAttribute("pad", e.toString());
             emotion.setAttribute("name", e.getName());
             affect.appendChild(emotion);
