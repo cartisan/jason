@@ -22,6 +22,7 @@ import jason.asSyntax.Term;
 public class AffectiveAgent extends Agent {
 
     private Personality personality;
+    private boolean targetsChanged = false;
 
     public AffectiveAgent() {
         super();
@@ -188,10 +189,8 @@ public class AffectiveAgent extends Agent {
         this.addBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR,
                                            ASSyntax.createAtom(newMood.getType())));
     
-        // reset target list in beliefs in BB, too
-        Literal targetLit = this.findBel(ASSyntax.createLiteral("affect_target", ASSyntax.createVar()), new Unifier());
-        this.delBel(targetLit);
-        this.addBel(ASSyntax.createLiteral("affect_target", ASSyntax.createList() ));
+        // make note to update affective_targets in beliefs in BB, too
+        this.targetsChanged = true;
         
         // update sources and targets in Circumstance
     	this.getAffectiveTS().getAffectiveC().S.clear();
@@ -206,10 +205,8 @@ public class AffectiveAgent extends Agent {
         this.addBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR,
                                            ASSyntax.createAtom(this.getMood().getType())));
         
-        // reset target list in beliefs in BB, too
-        Literal targetLit = this.findBel(ASSyntax.createLiteral("affect_target", ASSyntax.createVar()), new Unifier());
-        this.delBel(targetLit);
-        this.addBel(ASSyntax.createLiteral("affect_target", ASSyntax.createList() ));
+        // make note to update affective_targets in beliefs in BB, too
+        this.targetsChanged = true;
         
         // update sources and targets in Circumstance
     	this.getAffectiveTS().getAffectiveC().S.clear();
@@ -226,22 +223,43 @@ public class AffectiveAgent extends Agent {
         // abstract method, customer class can override this if required
     }
     
-    protected void addMoodTarget(String target) throws RevisionFailedException {
+    /**
+     * Adds a new target agent to the list that takes note of other agents that contributed to
+     * the current mood. This will be relayed to the agent's BB at the end of 
+     * {@link AffectiveTransitionSystem#applyUpMood()} when it calls {@link AffectiveAgent#updateMoodTarget()}.  
+     * @param target
+     */
+    protected void addMoodTarget(String target) {
         this.getAffectiveTS().getAffectiveC().T.add(target);
         
-        // update target beliefs in BB, too
-        Literal targetLit = this.findBel(ASSyntax.createLiteral("affect_target", ASSyntax.createVar()), new Unifier());
-        this.delBel(targetLit);
-        
-        List<Term> targets = getAffectiveTS().getAffectiveC().T.stream().map(ASSyntax::createAtom).collect(Collectors.toList());
-        this.addBel(ASSyntax.createLiteral("affect_target", ASSyntax.createList(targets) ));
+        // make note to update affective_targets in beliefs in BB, too
+        this.targetsChanged = true;
         
     }
+    
+    /**
+     * Checks, whether affect_targets changed during this reasoning cycle, and updates the BB of the agent
+     * accordingly.
+     * 
+     * @throws RevisionFailedException
+     */
+    protected void updateMoodTarget() throws RevisionFailedException {
+        if (this.targetsChanged) {
+            // update target beliefs in BB, too
+            Literal targetLit = this.findBel(ASSyntax.createLiteral("affect_target", ASSyntax.createVar()), new Unifier());
+            this.delBel(targetLit);
+            
+            List<Term> targets = getAffectiveTS().getAffectiveC().T.stream().map(ASSyntax::createAtom).collect(Collectors.toList());
+            this.addBel(ASSyntax.createLiteral("affect_target", ASSyntax.createList(targets) ));
+        }
+        
+        this.targetsChanged = false;
+    }
 
-	public void addMoodSource(String cause) {
+    public void addMoodSource(String cause) {
         this.getAffectiveTS().getAffectiveC().S.add(cause);
-		
-	}
+        
+    }
     
     public Mood getMood() {
         return this.getAffectiveTS().getAffectiveC().getM();

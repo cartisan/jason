@@ -15,7 +15,6 @@ import jason.asSyntax.parser.ParseException;
 import jason.runtime.Settings;
 
 public class AffectiveTransitionSystem extends TransitionSystem {
-    private String originalStepDeliberate = "";
     
     /**
      * Contains emotion names of emotions appraised during ASL reasoning.
@@ -40,6 +39,11 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         affC.setTS(this);
     }
 
+    @Override
+    protected String startingStepDeliberate() {
+        return "DeriveSEM";
+    }
+    
     @Override
     public boolean canSleepDeliberate() {
         boolean canSleep = super.canSleepDeliberate() && this.getAffectiveC().getPEM().isEmpty();
@@ -123,8 +127,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     protected void applySelEv() throws JasonException {
         // Rule for atomic, if there is an atomic intention, do not select event
         if (C.hasAtomicIntention()) {
-            this.originalStepDeliberate = "ProcAct"; // need to go to ProcAct to see if an atomic intention received a feedback action
-            this.stepDeliberate = "DeriveSEM";       // but first derive secondary emotions
+            this.stepDeliberate = "ProcAct"; // need to go to ProcAct to see if an atomic intention received a feedback action
             return;            
         }
 
@@ -136,9 +139,11 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         }
 
         if (this.C.hasEvent()) {
-            // first deal with +/-mood events, so we don't end up deliberating based on wrong mood-belief
+            // first deal with +/-affective events, so we don't end up deliberating based on wrong beliefs
             for(Event ev : this.C.getEvents()) {
-                if (ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("mood")) {
+                if ((ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("mood")) | 
+                     ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("affect_target") | 
+                     ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("emotion")) {
                     this.C.getEvents().remove(ev);
                     this.C.SE = ev;
                     this.stepDeliberate = "RelPl";
@@ -157,8 +162,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         }
         // Rule SelEv2
         // directly to deriveSEM and updateMood, then to ProcAct if no event to handle
-        this.originalStepDeliberate = "ProcAct";
-        this.stepDeliberate = "DeriveSEM";
+        this.stepDeliberate = "ProcAct";
     }
     
     @Override
@@ -166,21 +170,6 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         // can't use optimized AplPl selection cause SEM need access to C.RP which are not generated here
         // go back to original reasoning cycle
         this.stepDeliberate = "RelPl";
-    }
-    
-    @Override
-    protected void applyRelPl() throws JasonException {
-        super.applyRelPl();
-        // original RelPl can have three potential next steps:
-        // -ApplPl, when relevant plans were found
-        // -ProcAct, when no relevant plans were found 
-        // -SelEv, if "irrelevant" event was selected 
-        
-        if (stepDeliberate == "SelEv")
-            return;
-        
-        this.originalStepDeliberate = this.stepDeliberate;
-        this.stepDeliberate = "DeriveSEM";
     }
     
     protected void applyDeriveSEM() throws JasonException {
@@ -201,7 +190,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     }
     
     protected void applyUpMood() throws JasonException {
-        this.stepDeliberate = this.originalStepDeliberate;
+        this.stepDeliberate = "SelEv";
         Mood oldMood = this.getAffectiveC().getM().clone();
         List<Emotion> emotions = this.getAffectiveC().getAllEmotions();
         
@@ -238,6 +227,8 @@ public class AffectiveTransitionSystem extends TransitionSystem {
                 }
             }
         }
+        
+        this.getAffectiveAg().updateMoodTarget();
     }
     
     @Override
