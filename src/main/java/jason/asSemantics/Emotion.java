@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import jason.asSyntax.ASSyntax;
 import jason.asSyntax.Literal;
@@ -97,8 +98,23 @@ public class Emotion implements Affect {
         return new Point3D(averageP, averageA, averageD);
     }
     
+    /**
+     * Return all emotion names.
+     * @return
+     */
     public static Set<String> getAllEmotions() {
         return EMOTIONS.keySet();
+    }
+    
+    
+    /**
+     * Returns all emotion names of emotions that have negative pleasure.
+     * @return
+     */
+    public static Set<String> getNegativeEmotions() {
+        return EMOTIONS.values().stream().filter(em -> em.get().getP() < 0)
+                                  .map(em -> em.get().getName())
+                                  .collect(Collectors.toSet());
     }
 
     public static Emotion getEmotion(String emotion) {
