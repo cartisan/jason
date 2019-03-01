@@ -16,18 +16,23 @@ import jason.asSyntax.Term;
 /**
  *<p>Internal action: <b><code>.appraise_emotion</code></b>.
   
-  <p>Description: chains the provided emotion for emotional appraisal by the affective architecture.
-  Can only be used when AffectiveAgent (sub)class is selected as agentClass.
+  <p>Description: chains the provided deliberative emotion for appraisal by the affective architecture during secondary 
+  emotion appraisal.  Can only be used when AffectiveAgent (sub)class is selected as agentClass.
   
   <p>Parameters:<ul>
-  <li>emotion (atom): the emotion to be appraised, see {@link jason.asSemantics.Emotion} for emotion list
-  <li>target  (atom): the agent the emotion is targeted at [optional]
-  <li>source  (string): the event that caused the emotion [optional]
+  <li>emotion   (atom): the emotion to be appraised, see {@link jason.asSemantics.Emotion} for emotion list
+  <li>target    (atom): the agent the emotion is targeted at [optional]
+  <li>source    (string): the event that caused the emotion, variables will be unified [optional]
+  <li>addition  (boolean): true if source was a belief addition, false if belief removal [optional]
   </ul>
   
   Examples:<ul> 
   <li> <code>.appraise_emotion(joy)</code>: adds "joy" to list of deliberative emotions to be appraised next cycle </li>
-  <li> <code>.appraise_emotion(angry,bob)</code>: adds an angry emotion targeted at the agent bob </li>
+  <li> <code>.appraise_emotion(angry, bob)</code>: adds an angry emotion targeted at the agent bob </li>
+  <li> <code>.appraise_emotion(angry, bob, "stole(bob,X)[source(self)]")</code>: adds an angry emotion targeted at the agent
+   			  bob with the cause annotation <code>stole(bob,cheese)</code> if X unifying to cheese. </li>
+  <li> <code>.appraise_emotion(angry, bob, "love(bob, self)", false)</code>: adds an angry emotion targeted at the agent
+   			  bob with the cause annotation <code>-love(bob,self)</code>. </li>
   </ul>
   
   @author Leonid Berov
