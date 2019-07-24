@@ -385,7 +385,11 @@ public class PlanBodyImpl extends Structure implements PlanBody, Iterable<PlanBo
             if (bl.getBodyType().toString().length() > 0) {
                 u.setAttribute("type", bl.getBodyType().toString());
             }
-            u.appendChild( ((Structure)bl.getBodyTerm()).getAsDOM(document));
+            if (bl.getBodyTerm().isAtom()) { // fixes java.lang.ClassCastException: jason.asSyntax.Literal$TrueLiteral cannot be cast to jason.asSyntax.Structure
+                u.appendChild( ((Atom)bl.getBodyTerm()).getAsDOM(document));
+            } else {
+            	u.appendChild( ((Structure)bl.getBodyTerm()).getAsDOM(document));
+            }
             eb.appendChild(u);
             
             bl = bl.getBodyNext();
