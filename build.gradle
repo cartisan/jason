@@ -94,10 +94,10 @@ jar {
     }
     from sourceSets.main.allSource
     doLast {
-    	delete "C:/Users/Leon/eclipse-workspace/plotmas/lib/jason-o3a-1.0.jar"
+    	delete "C:/Users/Leon/eclipse-workspace/inBloom/lib/jason-o3a-1.0.jar"
         copy {
         	from 'build/libs/'
-        	into 'C:/Users/Leon/eclipse-workspace/plotmas/lib'
+        	into 'C:/Users/Leon/eclipse-workspace/inBloom/lib'
         	include 'jason-o3a-1.0.jar'
         }
     }

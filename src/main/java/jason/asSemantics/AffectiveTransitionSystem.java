@@ -25,12 +25,12 @@ public class AffectiveTransitionSystem extends TransitionSystem {
 
     AffectiveTransitionSystem(Agent a, Circumstance c, Settings s, AgArch ar) {
         super(a, c, s, ar);
-        init();
+        this.init();
     }
     
     AffectiveTransitionSystem(TransitionSystem ts) {
         super(ts.getAg(), ts.getC(), ts.getSettings(), ts.getUserAgArch());
-        init();
+        this.init();
     }
     
     private void init() {
@@ -47,16 +47,17 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     @Override
     public boolean canSleepDeliberate() {
         boolean canSleep = super.canSleepDeliberate() && this.getAffectiveC().getPEM().isEmpty();
-        if(canSleep) 
-            getLogger().fine("Recommended that deliberate sleeps for this reasoning cycle");
+        if(canSleep) {
+            this.getLogger().fine("Recommended that deliberate sleeps for this reasoning cycle");
+        }
         return canSleep;
     }
     
     @Override
     protected void applySemanticRuleSense() throws JasonException {
-        getLogger().fine(this.toString() + " sense step: " + stepSense);
-        switch (stepSense) {
-            case "DerivePEM": applyDerivePEM(); break;
+        this.getLogger().fine(this.toString() + " sense step: " + this.stepSense);
+        switch (this.stepSense) {
+            case "DerivePEM": this.applyDerivePEM(); break;
         default:
             super.applySemanticRuleSense();
         }
@@ -64,10 +65,10 @@ public class AffectiveTransitionSystem extends TransitionSystem {
 
     @Override
     protected void applySemanticRuleDeliberate() throws JasonException {
-        getLogger().fine(this.toString() + " deliberate step: " + stepDeliberate);
-        switch (stepDeliberate) {
-            case "DeriveSEM":     applyDeriveSEM(); break; 
-            case "UpMood":        applyUpMood(); break; 
+        this.getLogger().fine(this.toString() + " deliberate step: " + this.stepDeliberate);
+        switch (this.stepDeliberate) {
+            case "DeriveSEM":     this.applyDeriveSEM(); break;  // TODO: change order to derive only 1 SEM after SelEv
+            case "UpMood":        this.applyUpMood(); break;
         default:
             super.applySemanticRuleDeliberate();  
         }
@@ -75,7 +76,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     
     @Override
     protected void applySemanticRuleAct() throws JasonException {
-        getLogger().fine(this.toString() + " act step: " + stepAct);
+        this.getLogger().fine(this.toString() + " act step: " + this.stepAct);
         super.applySemanticRuleAct();
     }
     
@@ -109,8 +110,9 @@ public class AffectiveTransitionSystem extends TransitionSystem {
                     }
                     Emotion emotion = Emotion.getEmotion(emotionType);
                     
-                    if(emotionLit.getArity() == 2)
+                    if(emotionLit.getArity() == 2) {
                         emotion.setTarget(emotionLit.getTerm(1).toString());
+                    }
                     
                     emotion.setCause(percept.toString());
                     
@@ -126,13 +128,13 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     @Override
     protected void applySelEv() throws JasonException {
         // Rule for atomic, if there is an atomic intention, do not select event
-        if (C.hasAtomicIntention()) {
+        if (this.C.hasAtomicIntention()) {
             this.stepDeliberate = "ProcAct"; // need to go to ProcAct to see if an atomic intention received a feedback action
             return;            
         }
 
         // Rule for atomic, events from atomic intention have priority
-        this.C.SE = C.removeAtomicEvent();
+        this.C.SE = this.C.removeAtomicEvent();
         if (this.C.SE != null) {
             this.stepDeliberate = "RelPl";
             return;
@@ -141,9 +143,10 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         if (this.C.hasEvent()) {
             // first deal with +/-affective events, so we don't end up deliberating based on wrong beliefs
             for(Event ev : this.C.getEvents()) {
-                if ((ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("mood")) | 
+                if (ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("mood") |
                      ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("affect_target") | 
                      ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("emotion")) {
+                    // TODO: refactor this into AffectiveAgent#selectEvent!
                     this.C.getEvents().remove(ev);
                     this.C.SE = ev;
                     this.stepDeliberate = "RelPl";
@@ -153,15 +156,16 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             
             // Rule SelEv1 -- like original TransitionSystem.applySelEv
             this.C.SE = this.getAg().selectEvent(this.C.getEvents());
-            if (getLogger().isLoggable(Level.FINE)) 
-                getLogger().fine("Selected event "+this.C.SE);
+            if (this.getLogger().isLoggable(Level.FINE)) {
+                this.getLogger().fine("Selected event "+this.C.SE);
+            }
             if (this.C.SE != null) {
-                this.stepDeliberate = "RelPl";
+                this.stepDeliberate = "RelPl"; // TODO: DeriveSEM, UpMood after this
                 return;
             }
         }
         // Rule SelEv2
-        // directly to deriveSEM and updateMood, then to ProcAct if no event to handle
+        // directly to ProcAct if no event to handle
         this.stepDeliberate = "ProcAct";
     }
     
@@ -180,8 +184,8 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         
         
         // derive new sem
-        // TODO: perform more appraisal that e.g. takes into account C.RP?
-        synchronized(deliberative_appraisal) {
+        // TODO: find if currentEvent triggers a secondary emotion, using something like this.C.SE == emotion.cause
+        synchronized(this.deliberative_appraisal) {
             for(Emotion emotion : this.deliberative_appraisal) {
                 this.getAffectiveAg().addEmotion(emotion, "SEM");
             }
@@ -207,7 +211,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         Mood newMood = this.getAffectiveC().getM().clone();
         
         // allow agent to react to change of mood values
-        if(!(oldMood.equals(newMood))) {
+        if(!oldMood.equals(newMood)) {
             this.getAffectiveAg().updateMoodValue(newMood);
             
             // if mood changed octants, update agent beliefs and reset target list
@@ -253,7 +257,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
               if(!(innerConditions.size()==1)) {
                   // list of conditions instead of: functor(term1,term2)
                   // e.g. affect(personality(E,hi),mood(P,lo))
-                  getLogger().severe("*** ERROR in AffectiveTransitionSystem::applyApplPl >> Plan annotation " +
+                  this.getLogger().severe("*** ERROR in AffectiveTransitionSystem::applyApplPl >> Plan annotation " +
                                      affect_condition.toString() + 
                                      " is malformed, too many terms.");
                   throw new RuntimeException(affect_condition.toString() + " not a valid affective constraint.");
@@ -264,10 +268,10 @@ public class AffectiveTransitionSystem extends TransitionSystem {
                 if(this.getAffectiveAg().checkConstraint((Literal) innerConditions.get(0))) {
                     // if all terms in the annotation fit our agent, save this option as a specialized option 
                     specialisedOptions.add(o);
-                }
-                else
+                } else {
                     // at least one annotation doesn't fit this personality, can't use this option
                     it.remove();
+            }
             }
             
         }
@@ -279,7 +283,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         }
         
         //we've been removing options in AP, if no options are left, proceed as usual in such a case
-        if (this.C.AP.isEmpty())
+        if (this.C.AP.isEmpty()) {
             this.applyRelApplPlRule2("applicable");
     }
 
