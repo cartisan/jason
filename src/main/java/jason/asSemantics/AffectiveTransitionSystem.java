@@ -99,7 +99,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         while (perceptsIt.hasNext()) {
             Literal percept = perceptsIt.next();
 
-            // get all terms of form ´emotion(X)´/´emotion(X, Target)´ in annotations, or empty list if none present
+            // get all terms of form ´emotion(X)´ in annotations, or empty list if none present
             ListTerm emotions = percept.getAnnots(Emotion.ANNOTATION_FUNCTOR);
             for(Term emotionTerm: emotions) {
                 try {
@@ -110,11 +110,13 @@ public class AffectiveTransitionSystem extends TransitionSystem {
                     }
                     Emotion emotion = Emotion.getEmotion(emotionType);
 
-                    if(emotionLit.getArity() == 2) {
-                        emotion.setTarget(emotionLit.getTerm(1).toString());
+                    Literal targetLit = percept.getAnnot("target");
+                    if(targetLit != null) {
+                        emotion.setTarget(targetLit.getTerm(0).toString());
                     }
 
-                    emotion.setCause(percept.toString());
+                    String causeNoAnnots = this.removeAnnots(percept.toString());
+                    emotion.setCause(causeNoAnnots);
 
                     this.getAffectiveAg().addEmotion(emotion, "PEM");
                 } catch (ParseException e) {
@@ -315,4 +317,22 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         return (AffectiveAgent) this.getAg();
     }
 
+    private String removeAnnots(String s) {
+        String result = "";
+        int openParens = 0;
+
+        for(char c : s.toCharArray()) {
+            if( c == '[' & openParens == 0) {
+                break;
+            }
+
+            if(c == '(') {
+                openParens += 1;
+            } else if(c == ')' ) {
+                openParens -= 1;
+            }
+            result += c;
+        }
+        return result;
+    }
 }
