@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import jason.JasonException;
 import jason.architecture.AgArch;
@@ -40,11 +41,6 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     }
 
     @Override
-    protected String startingStepDeliberate() {
-        return "DeriveSEM";
-    }
-
-    @Override
     public boolean canSleepDeliberate() {
         boolean canSleep = super.canSleepDeliberate() && this.getAffectiveC().getPEM().isEmpty();
         if(canSleep) {
@@ -57,7 +53,8 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     protected void applySemanticRuleSense() throws JasonException {
         this.getLogger().fine(this.toString() + " sense step: " + this.stepSense);
         switch (this.stepSense) {
-            case "DerivePEM": this.applyDerivePEM(); break;
+            case "UpMood":        this.applyUpMood(); break;
+            case "DeriveSEM":     this.applyDeriveSEM(); break;
         default:
             super.applySemanticRuleSense();
         }
@@ -67,8 +64,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     protected void applySemanticRuleDeliberate() throws JasonException {
         this.getLogger().fine(this.toString() + " deliberate step: " + this.stepDeliberate);
         switch (this.stepDeliberate) {
-            case "DeriveSEM":     this.applyDeriveSEM(); break;  // TODO: change order to derive only 1 SEM after SelEv
-            case "UpMood":        this.applyUpMood(); break;
+            case "DerivePEM":     this.applyDerivePEM(); break;
         default:
             super.applySemanticRuleDeliberate();
         }
@@ -81,52 +77,72 @@ public class AffectiveTransitionSystem extends TransitionSystem {
     }
 
     /* ------ Sense States ------------ */
-    @Override
-    protected void applyProcMsg() throws JasonException {
-        super.applyProcMsg();
-        this.stepSense = "DerivePEM";
-    }
 
-    protected void applyDerivePEM() throws JasonException {
-        this.stepSense = "SelEv";
+    protected void applyUpMood() throws JasonException {
+        this.stepSense = "DeriveSEM";
 
-        // apply one step of decay to old pem
-        this.getAffectiveC().stepDecayPEM();
+        Mood oldMood = this.getAffectiveC().getM().clone();
+        List<Emotion> emotions = this.getAffectiveC().getAllEmotions();
 
-        // appraise new pem
-        Iterator<Literal> perceptsIt = this.getAg().getBB().getPercepts();
+        if(!emotions.isEmpty()) {
+            // perform one step of mood update
+            this.getLogger().fine("Performing mood update");
+            this.getAffectiveC().getM().updateMood(emotions, this.getAffectiveAg().getPersonality());
+            Mood newMood = this.getAffectiveC().getM().clone();
 
-        while (perceptsIt.hasNext()) {
-            Literal percept = perceptsIt.next();
+            // update beliefs
+            this.getAffectiveAg().updateMoodValue(newMood);
+            if(!oldMood.getType().equals(newMood.getType())){
+                this.getAffectiveAg().updateMoodType();
+            }
 
-            // get all terms of form ´emotion(X)´ in annotations, or empty list if none present
-            ListTerm emotions = percept.getAnnots(Emotion.ANNOTATION_FUNCTOR);
-            for(Term emotionTerm: emotions) {
-                try {
-                    Literal emotionLit = ASSyntax.parseLiteral(emotionTerm.toString());
-                    String emotionType = emotionLit.getTerm(0).toString(); //gets X from ´emotion(X)´
-                    if (!Emotion.getAllEmotions().contains(emotionType)) {
-                        throw new JasonException(emotionType + " is not a valid OCC emotion, check the catalogue in jason.asSemantics.Emotion");
+            // see if some of the current emotions contributed directly to current mood, if yes extract targets and sources
+            for (Emotion emotion: this.getAffectiveC().getAllEmotions()) {
+                if (Affect.getOctant(emotion).equals(Affect.getOctant(this.getAffectiveC().getM()))) {
+                    //emotion contributes to current mood
+                    this.getAffectiveAg().addMoodSource(emotion.cause);
+
+                    if (emotion.hasTarget()) {
+                        this.getAffectiveAg().addMoodTarget(emotion.target);
                     }
-                    Emotion emotion = Emotion.getEmotion(emotionType);
-
-                    Literal targetLit = percept.getAnnot("target");
-                    if(targetLit != null) {
-                        emotion.setTarget(targetLit.getTerm(0).toString());
-                    }
-
-                    String causeNoAnnots = this.removeAnnots(percept.toString());
-                    emotion.setCause(causeNoAnnots);
-
-                    this.getAffectiveAg().addEmotion(emotion, "PEM");
-                } catch (ParseException e) {
-                    throw new JasonException(e.getMessage());
                 }
+            }
+            this.getAffectiveAg().updateMoodTarget();
+
+            //decay emotion that have been integrated into mood
+            this.getAffectiveC().stepDecayPEM();
+            this.getAffectiveC().stepDecaySEM();
+        } else if (!oldMood.equals(this.getAffectiveAg().getDefaultMood())) {
+            // perform one step of decay on old mood
+            this.getLogger().fine("Performing mood decay");
+            this.getAffectiveC().getM().stepDecay(this.getAffectiveAg().getDefaultMood(),
+                                                  this.getAffectiveAg().getPersonality());
+
+            // update beliefs
+            Mood newMood = this.getAffectiveC().getM().clone();
+            this.getAffectiveAg().updateMoodValue(newMood);
+            if(!oldMood.getType().equals(newMood.getType())){
+                this.getAffectiveAg().updateMoodType();
+                this.getAffectiveAg().updateMoodTarget();
             }
         }
     }
 
+    protected void applyDeriveSEM() throws JasonException {
+        this.stepSense = "SelEv";
+
+        // derive new sem
+        synchronized(this.deliberative_appraisal) {
+            this.getLogger().fine("Secondary emotions active: " + this.deliberative_appraisal);
+            for(Emotion emotion : this.deliberative_appraisal) {
+                this.getAffectiveAg().addEmotion(emotion, "SEM");
+            }
+            this.deliberative_appraisal.clear();
+        }
+    }
+
     /* ------ Deliberate States ------------ */
+
     @Override
     protected void applySelEv() throws JasonException {
         // Rule for atomic, if there is an atomic intention, do not select event
@@ -138,20 +154,24 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         // Rule for atomic, events from atomic intention have priority
         this.C.SE = this.C.removeAtomicEvent();
         if (this.C.SE != null) {
-            this.stepDeliberate = "RelPl";
+            this.stepDeliberate = "DerivePEM";
             return;
         }
 
         if (this.C.hasEvent()) {
             // first deal with +/-affective events, so we don't end up deliberating based on wrong beliefs
-            for(Event ev : this.C.getEvents()) {
+        	// example: +mood(hostile) might trigger the intention !punish -> here we encode that these things take precedence
+        	// also means that unimportant internal events like -affect_target([]) won't pollute events view in debugger
+            Iterator<Event> it = this.C.getEvents().iterator();
+            while(it.hasNext()) {
+                Event ev = it.next();
                 if (ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("mood") |
                      ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("affect_target") |
                      ev.getTrigger().getPredicateIndicator().getFunctor().endsWith("emotion")) {
-                    // TODO: refactor this into AffectiveAgent#selectEvent!
-                    this.C.getEvents().remove(ev);
+                    it.remove();
                     this.C.SE = ev;
-                    this.stepDeliberate = "RelPl";
+                    this.getLogger().fine("Selected event "+this.C.SE);
+                    this.stepDeliberate = "DerivePEM";
                     return;
                 }
             }
@@ -162,7 +182,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
                 this.getLogger().fine("Selected event "+this.C.SE);
             }
             if (this.C.SE != null) {
-                this.stepDeliberate = "RelPl"; // TODO: DeriveSEM, UpMood after this
+                this.stepDeliberate = "DerivePEM";
                 return;
             }
         }
@@ -171,70 +191,55 @@ public class AffectiveTransitionSystem extends TransitionSystem {
         this.stepDeliberate = "ProcAct";
     }
 
+    protected void applyDerivePEM() throws JasonException {
+        this.stepDeliberate = "RelPl";
+
+        // appraise new pem
+        String selectedEvent = this.C.SE.toString().substring(1); // remove +/- add begin, to translate event notation to literal notation
+        try {
+            if (this.C.SE.isInternal() || selectedEvent.startsWith("!")) {
+                // selected event is internal (or processing an intention), no primary emotions could have been added to it
+                return;
+            }
+            Literal percept = ASSyntax.parseLiteral(selectedEvent);
+
+            // get all terms of form ´emotion(X)´ in annotations, or empty list if none present
+            ListTerm emotions = percept.getAnnots(Emotion.ANNOTATION_FUNCTOR);
+            this.getLogger().fine("Active primary emotions identifed in: " + percept + " are: " + emotions);
+            for(Term emotionTerm: emotions) {
+                Literal emotionLit = ASSyntax.parseLiteral(emotionTerm.toString());
+                String emotionType = emotionLit.getTerm(0).toString(); //gets X from ´emotion(X)´
+                if (!Emotion.getAllEmotions().contains(emotionType)) {
+                    throw new JasonException(emotionType + " is not a valid OCC emotion, check the catalogue in jason.asSemantics.Emotion");
+                }
+                Emotion emotion = Emotion.getEmotion(emotionType);
+
+                Literal targetLit = percept.getAnnot("target");
+                if(targetLit != null) {
+                    emotion.setTarget(targetLit.getTerm(0).toString());
+                }
+
+                String causeNoAnnots = this.removeAnnots(percept.toString());
+                emotion.setCause(causeNoAnnots);
+
+                this.getAffectiveAg().addEmotion(emotion, "PEM");
+            }
+        } catch (ParseException e) {
+            throw new JasonException(e.getMessage());
+        }
+    }
+
+    protected void applyProcMsg() throws JasonException {
+        super.applyProcMsg();
+        this.stepSense = "UpMood";
+
+    }
+
     @Override
     protected void applyFindOp() throws JasonException {
         // can't use optimized AplPl selection cause SEM need access to C.RP which are not generated here
         // go back to original reasoning cycle
         this.stepDeliberate = "RelPl";
-    }
-
-    protected void applyDeriveSEM() throws JasonException {
-        this.stepDeliberate = "UpMood";
-
-        // apply one decay step on old sem
-        this.getAffectiveC().stepDecaySEM();
-
-
-        // derive new sem
-        // TODO: find if currentEvent triggers a secondary emotion, using something like this.C.SE == emotion.cause
-        synchronized(this.deliberative_appraisal) {
-            for(Emotion emotion : this.deliberative_appraisal) {
-                this.getAffectiveAg().addEmotion(emotion, "SEM");
-            }
-            this.deliberative_appraisal.clear();
-        }
-    }
-
-    protected void applyUpMood() throws JasonException {
-        this.stepDeliberate = "SelEv";
-        Mood oldMood = this.getAffectiveC().getM().clone();
-        List<Emotion> emotions = this.getAffectiveC().getAllEmotions();
-
-        if(emotions.isEmpty()) {
-            // perform one step of decay on old mood
-            this.getAffectiveC().getM().stepDecay(this.getAffectiveAg().getDefaultMood(),
-                                                  this.getAffectiveAg().getPersonality());
-        }
-        else {
-            // perform one step of mood update
-            this.getAffectiveC().getM().updateMood(emotions, this.getAffectiveAg().getPersonality());
-        }
-
-        Mood newMood = this.getAffectiveC().getM().clone();
-
-        // allow agent to react to change of mood values
-        if(!oldMood.equals(newMood)) {
-            this.getAffectiveAg().updateMoodValue(newMood);
-
-            // if mood changed octants, update agent beliefs and reset target list
-            if(oldMood.getType() != newMood.getType()){
-                this.getAffectiveAg().updateMoodType(oldMood, newMood);
-            }
-        }
-
-        // see if some of the current emotions contributed directly to current mood, if yes extract targets and sources
-        for (Emotion emotion: this.getAffectiveC().getAllEmotions()) {
-            if (Affect.getOctant(emotion).equals(Affect.getOctant(newMood))) {
-                //emotion contributes to current mood
-                this.getAffectiveAg().addMoodSource(emotion.cause);
-
-                if (emotion.hasTarget()) {
-                    this.getAffectiveAg().addMoodTarget(emotion.target);
-                }
-            }
-        }
-
-        this.getAffectiveAg().updateMoodTarget();
     }
 
     @Override
@@ -334,5 +339,26 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             result += c;
         }
         return result;
+    }
+
+    public Logger getLogger(String agName) {
+        if (this.getUserAgArch().getAgName().equals(agName)) {
+            return this.getLogger();
+        } else {
+            return new SilentLogger();
+        }
+    }
+
+    private class SilentLogger extends Logger {
+
+        protected SilentLogger() {
+            super("silent", null);
+        }
+
+        @Override
+        public void log(Level level, String msg) {
+            // we silently omit the message
+            return;
+        }
     }
 }
