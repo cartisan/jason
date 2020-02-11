@@ -144,7 +144,7 @@ public class Mood implements Serializable, Affect {
         // check if distance to default mood is smaller then one decay step
         // in that case, just set new mood to default mood
         if(diffVec.magnitude() <= stepLengths) {
-            this.PAD = defaultMood.PAD;
+            this.PAD = new Point3D(defaultMood.getP(), defaultMood.getA(), defaultMood.getD());
             return;
         }
 

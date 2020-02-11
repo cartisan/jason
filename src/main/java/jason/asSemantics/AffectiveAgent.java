@@ -105,12 +105,12 @@ public class AffectiveAgent extends Agent {
      */
     public void initializePersonality(Personality personality) throws JasonException {
         this.personality = personality;
-        ((AffectiveCircumstance) this.ts.getC()).setMood(this.personality.defaultMood());
+        ((AffectiveCircumstance) this.ts.getC()).setMood(this.personality.getDefaultMood());
         this.updateMoodType();
     }
 
     public Mood getDefaultMood() {
-        return this.personality.defaultMood();
+        return this.personality.getDefaultMood();
     }
 
     /**

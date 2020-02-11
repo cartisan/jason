@@ -95,8 +95,8 @@ public class AffectiveCircumstance extends Circumstance {
         for (Emotion em: ems){
             em.stepDecay();
             if(em.intensity > 0) {
-				newEms.add(em);
-			} else {
+                newEms.add(em);
+            } else {
                 // remove belief that agent is experiencing the emotion from BB
                 this.getAffectiveAg().removeEmotion(em);
             }
@@ -112,7 +112,7 @@ public class AffectiveCircumstance extends Circumstance {
     private void createMood(AffectiveAgent ag) {
         // Usually, at this point this ag will have default personality, when personality gets changed during ag init
         // Agent class will take care of updating circumstance' mood
-        this.M = ag.getPersonality().defaultMood();
+        this.M = ag.getPersonality().getDefaultMood();
     }
 
     public void setMood(Mood m) {
@@ -129,8 +129,8 @@ public class AffectiveCircumstance extends Circumstance {
         this.S = new LinkedList<>();
 
         if(this.ts != null) {
-			this.createMood(this.getAffectiveAg());
-		}
+            this.createMood(this.getAffectiveAg());
+        }
     }
 
 

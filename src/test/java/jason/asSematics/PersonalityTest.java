@@ -10,7 +10,7 @@ public class PersonalityTest extends TestCase{
 
     public void testDefMoodComputation() {
         Personality per = Personality.createDefaultPersonality();  // (0,0,0,0,0)
-        Mood defMood = per.defaultMood();
+        Mood defMood = per.getDefaultMood();
         
         // test that neutral pers results in neutral mood
         assertEquals(0.0, defMood.getP());
@@ -19,17 +19,17 @@ public class PersonalityTest extends TestCase{
         
         // test that Pleasure is maximized by correct personality
         per = new Personality(0, 0, 1, 1, -1);
-        defMood = per.defaultMood();
+        defMood = per.getDefaultMood();
         assertEquals(1.0, defMood.getP());
         
         // test that Arousal is maximized by correct personality
         per = new Personality(1, 0, 0, 1, 1);
-        defMood = per.defaultMood();
+        defMood = per.getDefaultMood();
         assertEquals(1.0, defMood.getA());
         
         // test that Dominance is maximized by correct personality
         per = new Personality(1, 1, 1, -1, 0);
-        defMood = per.defaultMood();
+        defMood = per.getDefaultMood();
         assertEquals(1.0, defMood.getD());  
     }
     
@@ -43,7 +43,7 @@ public class PersonalityTest extends TestCase{
                     for(double a:range) {
                         for(double n:range) {
                             try {
-                                new Personality(o,c,e,a,n).defaultMood();
+                                new Personality(o,c,e,a,n).getDefaultMood();
                             }
                             catch(IllegalArgumentException ex) {
 //                              System.out.println(new Personality(o,c,e,a,n).toString());

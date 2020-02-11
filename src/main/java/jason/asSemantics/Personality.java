@@ -40,12 +40,16 @@ public class Personality implements Serializable {
     public double A;
     public double N;
 
+    private Mood defaultMood;
+
     public Personality(double o, double c, double e, double a, double n) {
         if(o>1 | c>1 | e>1 | a>1 | n>1 | o<-1 | c<-1 | e<-1 | a<-1 | n<-1) {
             IllegalArgumentException ex =  new IllegalArgumentException("One of the Personality parameters: (" + o + "," +c + "," + e + "," + a + "," + n + ") exceeds the bounds (-1.0 <= x <= 1.0)");
             throw ex;
         }
         this.O = o; this.C=c; this.E=e; this.A=a; this.N=n;
+
+        this.defaultMood = this.computeDefaultMood();
     }
 
     public static Personality createDefaultPersonality() {
@@ -85,23 +89,25 @@ public class Personality implements Serializable {
         };
     }
 
+    public Mood getDefaultMood() {
+        return this.defaultMood.clone();
+    }
     /*
      * The mapping from personality traits to default mood is derived by:
      * Gebhard, P. (2005). ALMA: a layered model of affect. In Proceedings of the fourth International joint
      * conference on Autonomous agents and multiagent systems, pages 29–36, New York, USA. ACM.
      *
      */
-    public Mood defaultMood() {
+    private Mood computeDefaultMood() {
         double p = 0.21*this.E + 0.59*this.A - 0.19*this.N;
         double a = 0.15*this.O + 0.30*this.A + 0.57*this.N;
         double d = 0.25*this.O + 0.17*this.C + 0.60*this.E - 0.32*this.A;
 
-        // normalize to -1,1 range
-        // TODO: (Gebhard 2005) truncates these values at -1/1 instead of normalization
+        // (Gebhard 2005) truncates these values at -1/1 instead of normalization
         // (source: https://github.com/A-L-M-A/ALMA/blob/master/src/de/affect/personality/PersonalityMoodRelations.java)
-        p /= 0.21 + 0.59 + 0.19;
-        a /= 0.15 + 0.30 + 0.57;
-        d /= 0.25 + 0.17 + 0.60 + 0.32;
+        p = Math.max(Math.min(p, 1), -1);
+        a = Math.max(Math.min(a, 1), -1);
+        d = Math.max(Math.min(d, 1), -1);
 
         return new Mood(p, a, d);
     }
@@ -153,6 +159,8 @@ public class Personality implements Serializable {
             case "neuroticism":         this.N = value; break;
             default:                    throw new RuntimeException("Trying to set invalid personality trait: " + trait);
         }
+
+        this.defaultMood = this.computeDefaultMood();
     }
 
     /**
