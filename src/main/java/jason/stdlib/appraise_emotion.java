@@ -9,7 +9,7 @@ import jason.asSemantics.DefaultInternalAction;
 import jason.asSemantics.TransitionSystem;
 import jason.asSemantics.Unifier;
 import jason.asSyntax.ASSyntax;
-import jason.asSyntax.Literal;
+import jason.asSyntax.NumberTerm;
 import jason.asSyntax.StringTermImpl;
 import jason.asSyntax.Term;
 
@@ -23,16 +23,16 @@ import jason.asSyntax.Term;
   <li>emotion   (atom): the emotion to be appraised, see {@link jason.asSemantics.Emotion} for emotion list
   <li>source    (string): the event that caused the emotion, variables will be unified
   <li>target    (atom): the agent the emotion is targeted at [optional]
-  <li>deletion  (boolean): true if source was a belief deletion, false if belief addition (default: false) [optional]
+  <li>type      (boolean): type of causing event -- 0 for addition, 1 for deletion, 2 for action/speech (default: 0) [optional]
   </ul>
 
   Examples:<ul>
   <li> <code>.appraise_emotion(joy)</code>: adds "joy" to list of deliberative emotions to be appraised next cycle </li>
   <li> <code>.appraise_emotion(angry, "stole(_,X)[source(self)]")</code>: adds an angry emotion with the cause annotation
-              <code>stole(_,cheese)</code> if X unifies to cheese. </li>
+              <code>+stole(_,cheese)</code> if X unifies to cheese. </li>
   <li> <code>.appraise_emotion(angry, "stole(bob,X)[source(self)]", bob)</code>: adds an angry emotion targeted at the agent
-              bob with the cause annotation <code>stole(bob,cheese)</code> if X unifying to cheese. </li>
-  <li> <code>.appraise_emotion(angry, "love(bob, self)", bob, true)</code>: adds an angry emotion targeted at the agent
+              bob with the cause annotation <code>+stole(bob,cheese)</code> if X unifying to cheese. </li>
+  <li> <code>.appraise_emotion(angry, "love(bob, self)", bob, 1)</code>: adds an angry emotion targeted at the agent
               bob with the cause annotation <code>-love(bob,self)</code>. </li>
   </ul>
 
@@ -76,16 +76,24 @@ public class appraise_emotion extends DefaultInternalAction {
                 return true;
             }
             case 4: {
-                if(args[3].equals(Literal.LTrue)) {
-                    ((AffectiveTransitionSystem) ts).scheduleForAppraisal(emotion, "-" + cause, args[2].toString());
-                    return true;
-                }
-                if(args[3].equals(Literal.LFalse)) {
-                    ((AffectiveTransitionSystem) ts).scheduleForAppraisal(emotion, "+" + cause, args[2].toString());
-                    return true;
+                if (args[3].isNumeric()) {
+                    int val = (int) ((NumberTerm)args[3]).solve();
+
+                    if(val == 0) {
+                        ((AffectiveTransitionSystem) ts).scheduleForAppraisal(emotion, "+" + cause, args[2].toString());
+                        return true;
+                    }
+                    if(val == 1) {
+                        ((AffectiveTransitionSystem) ts).scheduleForAppraisal(emotion, "-" + cause, args[2].toString());
+                        return true;
+                    }
+                    if(val == 2) {
+                        ((AffectiveTransitionSystem) ts).scheduleForAppraisal(emotion, cause, args[2].toString());
+                        return true;
+                    }
                 }
 
-                throw new JasonException("4th argument of internal action: appraise_emotion should be a boolean, was: " + args[3]);
+                throw new JasonException("4th argument of internal action: appraise_emotion should be an int in range (0,2); was: " + args[3]);
             }
             default: throw new JasonException("Wrong number of arguments provided for internal action: appraise_emotion");
         }
