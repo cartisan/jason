@@ -1,6 +1,7 @@
 package jason.asSemantics;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -83,11 +84,41 @@ public class AffectiveAgent extends Agent {
         return a;
     }
 
+    /**
+     * Returns the first option that has an affect annotation, because options with annotations are more specialized, and
+     * {@link AffectiveTransitionSystem#applyApplPl()} ensures that only plans with valid annotations are available at this
+     * stage.
+     *
+     * If no options with annotations are present, simply returns the first option like in the override implementation.
+     * If no options are present, returns null.
+     * @see jason.asSemantics.Agent#selectOption(java.util.List)
+     */
+    @Override
+    public Option selectOption(List<Option> options) {
+        if (options == null || options.isEmpty()) {
+            return null;
+        }
+
+        // return first option that has an affect annotation
+        for (Iterator<Option> it = options.iterator(); it.hasNext(); ) {
+            Option o = it.next();
+
+            Literal affect_condition = (Literal) o.getPlan().getLabel().getAnnots(Affect.ANNOTATION_FUNCTOR).getTerm();
+            if (affect_condition != null) {
+                it.remove();
+                return o;
+            }
+        }
+
+        // no specialized options with affective annotations exist, return first option
+        return options.remove(0);
+    }
+
     public Personality getPersonality() {
         return this.personality;
     }
 
-    protected AffectiveTransitionSystem getAffectiveTS() {
+    public AffectiveTransitionSystem getAffectiveTS() {
         return (AffectiveTransitionSystem) this.getTS();
     }
 

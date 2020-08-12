@@ -110,8 +110,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             this.getAffectiveAg().updateMoodTarget();
 
             //decay emotion that have been integrated into mood
-            this.getAffectiveC().stepDecayPEM();
-            this.getAffectiveC().stepDecaySEM();
+            this.getAffectiveC().stepDecayActiveEmotions();
         } else if (!oldMood.equals(this.getAffectiveAg().getDefaultMood())) {
             // perform one step of decay on old mood
             this.getLogger().fine("Performing mood decay");
@@ -250,11 +249,11 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             return;
         }
 
-        // there are applicable plans available, check all of them for personality annotations
-        //   if annotations are present, they all have to fit this agent in order for the plan to be applicable, otherwise remove from AP
-        //   if plans with fitting personality annotations are present, consider only these specialized options for AP
-        List<Option> specialisedOptions = new LinkedList<>();
-
+        /** there are applicable plans available, check all of them for affect annotations
+        *    if annotation is present, it has to fit this agent in order for the plan to be applicable, otherwise remove from AP
+        *    if no annotation is present, the plan also fits (but plans with annotations will be given precedence during selection
+        *    {@see AffectiveAgent#selectOption)}
+        **/
         for (Iterator<Option> it = this.C.AP.iterator(); it.hasNext(); ) {
             Option o = it.next();
 
@@ -270,23 +269,12 @@ public class AffectiveTransitionSystem extends TransitionSystem {
                   throw new RuntimeException(affect_condition.toString() + " not a valid affective constraint.");
               }
 
-                // a valid inner affective condition is present in this option
-                // form e.g. :[affect(and(personality(openness, high),not(mood(...)), ...))]
-                if(this.getAffectiveAg().checkConstraint((Literal) innerConditions.get(0))) {
-                    // if all terms in the annotation fit our agent, save this option as a specialized option
-                    specialisedOptions.add(o);
-                } else {
-                    // at least one annotation doesn't fit this personality, can't use this option
+                // inner affective condition is present but no valid for this agent
+                if(!this.getAffectiveAg().checkConstraint((Literal) innerConditions.get(0))) {
                     it.remove();
                 }
             }
-
-        }
-
-        // specialized plans that have a personality annotation fitting to this agent have been found, prefer these plans
-        if (!specialisedOptions.isEmpty()) {
-            this.C.AP = specialisedOptions;
-            return;
+            // no annotation present, this option is fine
         }
 
         //we've been removing options in AP, if no options are left, proceed as usual in such a case

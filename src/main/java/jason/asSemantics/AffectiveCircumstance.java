@@ -82,11 +82,8 @@ public class AffectiveCircumstance extends Circumstance {
         return this.S;
     }
 
-    public void stepDecayPEM() throws RevisionFailedException {
+    public void stepDecayActiveEmotions() throws RevisionFailedException {
         this.PEM = this.stepDecayEmotions(this.getPEM());
-    }
-
-    public void stepDecaySEM() throws RevisionFailedException {
         this.SEM = this.stepDecayEmotions(this.getSEM());
     }
 
