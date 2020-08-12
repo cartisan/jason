@@ -27,8 +27,8 @@ public class Mood implements Serializable, Affect {
 
     // defines how many decay steps are needed at most for a mood to return to default mood at N==0
     // N <> 0 affects DECAY_TIME: the higher N, the slower Mood decays (and inverse, too)
-    private static int MAX_DECAY_TIME = 50;     // was 30
-    private static double DECAY_STEP_LENGTH;    // gets set to ~0.12 if MAX_DECAY_TIME is 30
+    private static int MAX_DECAY_TIME = 100;
+    private static double DECAY_STEP_LENGTH;
 
     // defines how many decay steps are needed at most for a mood to reach the maximal value of the target octant at N==0
     // N <> 0 affects UPDATE_TIME: the higher N, the faster Mood moves along the P-dimension (and inverse, too)
