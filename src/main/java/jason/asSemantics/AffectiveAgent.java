@@ -137,7 +137,7 @@ public class AffectiveAgent extends Agent {
     public void initializePersonality(Personality personality) throws JasonException {
         this.personality = personality;
         ((AffectiveCircumstance) this.ts.getC()).setMood(this.personality.getDefaultMood());
-        this.updateMoodType();
+        this.updateMoodType(this.getMood());
     }
 
     public Mood getDefaultMood() {
@@ -215,7 +215,7 @@ public class AffectiveAgent extends Agent {
      * Gets called by {@linkplain AffectiveTransitionSystem} each time the mood type changes
      * due to mood updated during the reasoning cycle.
      */
-    public void updateMoodType() throws JasonException {
+    public void updateMoodType(Mood oldMood) throws JasonException {
     	// update mood type in belief base
     	Literal moodLit = this.findBel(ASSyntax.createLiteral(Mood.ANNOTATION_FUNCTOR, ASSyntax.createVar()),
                                          new Unifier());
@@ -226,7 +226,7 @@ public class AffectiveAgent extends Agent {
         // update sources and targets in Circumstance
         // make note to update affective_targets in beliefs in BB, too, if change was necessary
         this.getAffectiveTS().getAffectiveC().S.clear();
-        if (!this.getAffectiveTS().getAffectiveC().T.isEmpty()) {
+        if (!this.getAffectiveTS().getAffectiveC().T.isEmpty()   &    Math.signum(oldMood.getP()) != Math.signum(this.getMood().getP()) ) {
         	this.targetsChanged = true;
         	this.getAffectiveTS().getAffectiveC().T.clear();
         }

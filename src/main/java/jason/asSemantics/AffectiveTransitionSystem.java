@@ -93,12 +93,12 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             // update beliefs
             this.getAffectiveAg().updateMoodValue(newMood);
             if(!oldMood.getType().equals(newMood.getType())){
-                this.getAffectiveAg().updateMoodType();
+                this.getAffectiveAg().updateMoodType(oldMood);
             }
 
             // see if some of the current emotions contributed directly to current mood, if yes extract targets and sources
-            for (Emotion emotion: this.getAffectiveC().getAllEmotions()) {
-                if (Affect.getOctant(emotion).equals(Affect.getOctant(this.getAffectiveC().getM()))) {
+            for (Emotion emotion: emotions) {
+                if (Affect.contributeTo(emotion, newMood)) {
                     //emotion contributes to current mood
                     this.getAffectiveAg().addMoodSource(emotion.cause);
 
@@ -121,7 +121,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             Mood newMood = this.getAffectiveC().getM().clone();
             this.getAffectiveAg().updateMoodValue(newMood);
             if(!oldMood.getType().equals(newMood.getType())){
-                this.getAffectiveAg().updateMoodType();
+                this.getAffectiveAg().updateMoodType(oldMood);
                 this.getAffectiveAg().updateMoodTarget();
             }
         }
@@ -159,8 +159,8 @@ public class AffectiveTransitionSystem extends TransitionSystem {
 
         if (this.C.hasEvent()) {
             // first deal with +/-affective events, so we don't end up deliberating based on wrong beliefs
-        	// example: +mood(hostile) might trigger the intention !punish -> here we encode that these things take precedence
-        	// also means that unimportant internal events like -affect_target([]) won't pollute events view in debugger
+            // example: +mood(hostile) might trigger the intention !punish -> here we encode that these things take precedence
+            // also means that unimportant internal events like -affect_target([]) won't pollute events view in debugger
             Iterator<Event> it = this.C.getEvents().iterator();
             while(it.hasNext()) {
                 Event ev = it.next();
@@ -260,7 +260,7 @@ public class AffectiveTransitionSystem extends TransitionSystem {
             Literal affect_condition = (Literal) o.getPlan().getLabel().getAnnots(Affect.ANNOTATION_FUNCTOR).getTerm();
             if (affect_condition != null) {
               List<Term> innerConditions = affect_condition.getTerms();
-              if(!(innerConditions.size()==1)) {
+              if(!(innerConditions.size() == 1)) {
                   // list of conditions instead of: functor(term1,term2)
                   // e.g. affect(personality(E,hi),mood(P,lo))
                   this.getLogger().severe("*** ERROR in AffectiveTransitionSystem::applyApplPl >> Plan annotation " +
