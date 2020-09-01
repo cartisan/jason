@@ -102,8 +102,8 @@ public class Mood implements Serializable, Affect {
 
         // compute new Mood, take bounds into account
         Point3D stepVec = new Point3D(step.get(0) * neuroticism_factor,
-                                      step.get(1),
-                                      step.get(2));
+                                      step.get(1) * neuroticism_factor,
+                                      step.get(2) * neuroticism_factor);
 
         this.PAD = this.ensureBounds(this.PAD.add(stepVec));
     }
